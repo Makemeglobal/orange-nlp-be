@@ -9,12 +9,7 @@ const cors = require("cors");
 connectDB();
 const app = express();
 
-// const corsOptions = {
-//   origin: ['https://www.poweredbyorange.ai', 'http://localhost'],
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', ""],
-//   credentials: true
-// };
+
 
 app.use(cors());
 // app.use(cors)

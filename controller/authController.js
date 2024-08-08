@@ -11,7 +11,7 @@ const mongoose = require("mongoose");
 const Plan = require("../model/Plan");
 const Stripe = require("stripe");
 const Transaction = require("../model/Transaction");
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET; // The endpoint secret you get from Stripe dashboard
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 exports.signup = async (req, res) => {
@@ -205,7 +205,7 @@ exports.acceptInvitation = async (req, res) => {
     res.redirect(
       // ''
       // `http://localhost:3000/signup?token=${savedToken}`,
-      `https://www.poweredbyorange.ai/api/auth/signup?token=${savedToken}&email=${email}`
+      `https://www.poweredbyzot.ai/api/auth/signup?token=${savedToken}&email=${email}`
     );
     res
       .status(201)
@@ -358,8 +358,8 @@ exports.stripeSession = async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: "https://www.poweredbyorange.ai/invite", // URL to redirect to after a successful payment
-      cancel_url: "https://www.poweredbyorange.ai/not-successfull-order", // URL to redirect to if the payment is canceled
+      success_url: "https://www.poweredbyzot.ai/invite", // URL to redirect to after a successful payment
+      cancel_url: "https://www.poweredbyzot.ai/not-successfull-order", // URL to redirect to if the payment is canceled
     });
 
     await Transaction.create({

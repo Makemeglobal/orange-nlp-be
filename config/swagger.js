@@ -12,7 +12,7 @@ const options = {
     },
     servers: [
       {
-        url: 'https://orange-ai.onrender.com/api',
+        url: 'https://zot-ai.onrender.com/api',
       },
     ],
     components: {

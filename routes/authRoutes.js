@@ -5,13 +5,15 @@ const authController = require("../controller/authController");
 const upload = require("../middleware/multerConfig");
 const { authMiddleware } = require("../middleware/auth");
 const Feedback = require("../model/Feedback");
-router.post("/signup", authController.signup);
-router.post("/users/sub-users", authController.getSubUsersById);
+
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const bodyParser = require("body-parser");
 const User = require("../model/User");
 
+
+router.post("/signup", authController.signup);
+router.post("/users/sub-users", authController.getSubUsersById);
 /**
  * @swagger
  * /api/auth/verify-otp:
