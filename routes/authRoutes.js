@@ -5,11 +5,12 @@ const authController = require("../controller/authController");
 const upload = require("../middleware/multerConfig");
 const { authMiddleware } = require("../middleware/auth");
 const Feedback = require("../model/Feedback");
-
+const projectController = require('../controller/ProjectController');
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const bodyParser = require("body-parser");
 const User = require("../model/User");
+const Project = require("../model/Project");
 
 
 router.post("/signup", authController.signup);
@@ -325,5 +326,43 @@ router.post(
   bodyParser.raw({ type: "application/json" }),
   authController.stripePaymentStatus
 );
+
+
+
+router.post('/project',  authMiddleware , projectController.createProject);
+
+
+router.get('/projects', authMiddleware , projectController.getAllProjects);
+
+
+router.get('/project/:id', authMiddleware , projectController.getProjectById);
+router.get('/dashboard' , authMiddleware , async (req,res) => {
+  try{
+    const user = req.user;
+    const Projects = await Project.find({user:user});
+    const result = {
+      totalRecordings: Projects.length,
+      totalHours :Projects.reduce((total, project) => total + project.projectDuration/60, 0),
+      
+
+    }
+    return res.send({result:result}).status(200);
+  }catch(err){
+    console.log(err)
+    return res.send(err)
+  }
+
+})
+
+router.post('/resend-otp' , authController.resendOtp);
+
+router.get('/projects-by-month',authMiddleware , projectController.getProjectsByMonth);
+
+
+router.put('/project/:id', projectController.updateProject);
+
+
+router.delete('/project/:id', projectController.deleteProject);
+
 
 module.exports = router;

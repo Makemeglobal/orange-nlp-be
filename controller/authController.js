@@ -39,6 +39,31 @@ exports.signup = async (req, res) => {
   }
 };
 
+exports.resendOtp = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const userExists = await User.findOne({ email });
+
+
+
+    await OTP.deleteMany({ email });
+
+    
+    const otp = generateOTP();
+
+    await OTP.create({ email, otp });
+
+
+    await sendEmail(email, "Resend OTP", `Your new OTP is ${otp}`);
+
+    res.status(200).json({ message: "OTP resent to email" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.verifyOtpAndCreateUser = async (req, res) => {
   const { email, otp, fullName, country, phone, password, invited ,token } = req.body;
   
