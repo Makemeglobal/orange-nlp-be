@@ -13,7 +13,7 @@ const ProjectSchema = new Schema({
     meetingNotes: [{ type: Schema.Types.ObjectId, ref: 'MeetingNote' }],
     meetingSummary: { type: String, required: true },
     meetingDescription: { type: String, required: true },
-    meetingTexts: { type: String, required: true }
+    meetingTexts: { type: Array, required: true }
     
 },{ timestamps: true });
 
