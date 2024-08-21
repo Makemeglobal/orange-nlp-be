@@ -1,13 +1,13 @@
 const express = require("express");
-const http = require("http"); // Import the http module
-const socketIo = require("socket.io"); // Import socket.io
+const http = require("http");
+const socketIo = require("socket.io");
 const bodyParser = require("body-parser");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 require("dotenv").config();
-const { swaggerUi, specs } = require("./config/swagger");
-
 const cors = require("cors");
+const { v4: uuidv4 } = require('uuid');
+
 connectDB();
 const app = express();
 
@@ -15,41 +15,57 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
 
-// Create an HTTP server
 const server = http.createServer(app);
 
-// Initialize Socket.IO with the HTTP server
 const io = socketIo(server, {
   cors: {
-    origin: "*", // You can adjust this to restrict origins
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
 
-// Socket.IO events
+const chatRooms = new Map();
+
+app.post("/api/create-room", (req, res) => {
+  const roomId = uuidv4();
+  chatRooms.set(roomId, []);
+  const inviteLink = `${req.protocol}://${req.get('host')}/join/${roomId}`;
+  res.json({ roomId, inviteLink });
+});
+
+app.get("/join/:roomId", (req, res) => {
+  const { roomId } = req.params;
+  if (chatRooms.has(roomId)) {
+    res.json({ roomId, message: "Room found, you can join via Socket.IO." });
+  } else {
+    res.status(404).json({ message: "Room not found" });
+  }
+});
+
 io.on("connection", (socket) => {
-  console.log("New client connected");
+  socket.on("joinRoom", ({ roomId, username }) => {
+    if (chatRooms.has(roomId)) {
+      socket.join(roomId);
+      chatRooms.get(roomId).push({ username, socketId: socket.id });
+      io.to(roomId).emit("user-connected", { username, socketId: socket.id });
 
-  // Handling chatroom joining
-  socket.on("joinRoom", (room) => {
-    socket.join(room);
-    console.log(`User joined room: ${room}`);
+      socket.on("disconnect", () => {
+        chatRooms.get(roomId).forEach((user, index) => {
+          if (user.socketId === socket.id) {
+            chatRooms.get(roomId).splice(index, 1);
+            io.to(roomId).emit("user-disconnected", { username });
+          }
+        });
+      });
+    } else {
+      socket.emit("error", "Room not found");
+    }
   });
 
-  // Handling message sending
-  socket.on("chatMessage", (data) => {
-    const { room, message } = data;
-    io.to(room).emit("message", message);
-    console.log(`Message sent to room ${room}: ${message}`);
-  });
-
-  // Handling disconnection
-  socket.on("disconnect", () => {
-    console.log("Client disconnected");
+  socket.on("signal", ({ roomId, signal, to }) => {
+    io.to(to).emit("signal", { signal, from: socket.id });
   });
 });
 
 const PORT = process.env.PORT || 5000;
-
-// Start the server with Socket.IO
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
