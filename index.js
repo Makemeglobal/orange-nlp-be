@@ -18,12 +18,7 @@ app.use("/api/auth", authRoutes);
 
 const server = http.createServer(app);
 
-const io = socketIo(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
-});
+
 
 app.post("/api/create-room", async (req, res) => {
   const roomId = uuidv4();
@@ -45,33 +40,7 @@ app.get("/join/:roomId", async (req, res) => {
   }
 });
 
-io.on("connection", (socket) => {
-  console.log('hi');
-  socket.on("joinRoom", async ({ roomId, username }) => {
-    console.log('joinRoom');
-    const room = await ChatRoom.findOne({ roomId });
 
-    if (room) {
-      socket.join(roomId);
-      console.log('room joined')
-      room.users.push({ username, socketId: socket.id });
-      await room.save();
-      console.log(username,socket.id)
-      console.log(room)
-
-      io.to(roomId).emit("user-connected", { username, socketId: socket.id });
-
-      socket.on("disconnect", async () => {
-        console.log('disconnecting');
-        room.users = room.users.filter(user => user.socketId !== socket.id);
-        await room.save();
-
-        io.to(roomId).emit("user-disconnected", { username });
-      });
-    } else {
-      socket.emit("error", "Room not found");
-    }
-  });
 
   // app.post('/api/create-room' , async(req,res)=>{
   //   const 
@@ -117,18 +86,7 @@ io.on("connection", (socket) => {
   });
 
   // Handle recording status
-  socket.on("startRecording", (roomId) => {
-    io.to(roomId).emit("recording-status", { status: "started" });
-  });
-
-  socket.on("stopRecording", (roomId) => {
-    io.to(roomId).emit("recording-status", { status: "stopped" });
-  });
-
-  socket.on("signal", ({ roomId, signal, to }) => {
-    io.to(to).emit("signal", { signal, from: socket.id });
-  });
-});
+ 
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
