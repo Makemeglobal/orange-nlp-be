@@ -16,8 +16,7 @@ const {
   getTranscription,
   getTranscriptionsByUser,
   updateTranscription,
-  deleteTranscription,
-} = require("../controller/TranscriptionController");
+deleteTranscription } = require('../controller/TranscriptionController')
 
 router.post("/signup", authController.signup);
 router.post("/users/sub-users", authController.getSubUsersById);
