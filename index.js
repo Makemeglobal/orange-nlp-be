@@ -4,6 +4,7 @@ const socketIo = require("socket.io");
 const bodyParser = require("body-parser");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
+const ChatRoom = require("./model/ChatRoom"); // Import the model
 require("dotenv").config();
 const cors = require("cors");
 const { v4: uuidv4 } = require('uuid');
@@ -24,18 +25,20 @@ const io = socketIo(server, {
   }
 });
 
-const chatRooms = new Map();
-
-app.post("/api/create-room", (req, res) => {
+app.post("/api/create-room", async (req, res) => {
   const roomId = uuidv4();
-  chatRooms.set(roomId, []);
+  const newRoom = new ChatRoom({ roomId,messages:[] });
+  await newRoom.save();
+
   const inviteLink = `${req.protocol}://${req.get('host')}/join/${roomId}`;
   res.json({ roomId, inviteLink });
 });
 
-app.get("/join/:roomId", (req, res) => {
+app.get("/join/:roomId", async (req, res) => {
   const { roomId } = req.params;
-  if (chatRooms.has(roomId)) {
+  const room = await ChatRoom.findOne({ roomId });
+
+  if (room) {
     res.json({ roomId, message: "Room found, you can join via Socket.IO." });
   } else {
     res.status(404).json({ message: "Room not found" });
@@ -43,23 +46,83 @@ app.get("/join/:roomId", (req, res) => {
 });
 
 io.on("connection", (socket) => {
-  socket.on("joinRoom", ({ roomId, username }) => {
-    if (chatRooms.has(roomId)) {
+  console.log('hi');
+  socket.on("joinRoom", async ({ roomId, username }) => {
+    console.log('joinRoom');
+    const room = await ChatRoom.findOne({ roomId });
+
+    if (room) {
       socket.join(roomId);
-      chatRooms.get(roomId).push({ username, socketId: socket.id });
+      console.log('room joined')
+      room.users.push({ username, socketId: socket.id });
+      await room.save();
+      console.log(username,socket.id)
+      console.log(room)
+
       io.to(roomId).emit("user-connected", { username, socketId: socket.id });
 
-      socket.on("disconnect", () => {
-        chatRooms.get(roomId).forEach((user, index) => {
-          if (user.socketId === socket.id) {
-            chatRooms.get(roomId).splice(index, 1);
-            io.to(roomId).emit("user-disconnected", { username });
-          }
-        });
+      socket.on("disconnect", async () => {
+        console.log('disconnecting');
+        room.users = room.users.filter(user => user.socketId !== socket.id);
+        await room.save();
+
+        io.to(roomId).emit("user-disconnected", { username });
       });
     } else {
       socket.emit("error", "Room not found");
     }
+  });
+
+  // app.post('/api/create-room' , async(req,res)=>{
+  //   const 
+  // })
+  app.post('/api/chatrooms/:roomId/messages', async (req, res) => {
+    const { roomId } = req.params;
+    const { message } = req.body;
+  
+    console.log(roomId,message)
+    if (!message) {
+      return res.status(400).json({ error: 'Message content is required' });
+    }
+  
+    try {
+      const chatRoom = await ChatRoom.findOneAndUpdate(
+        { roomId },
+        { $push: { messages: message } },
+        { new: true, upsert: true }
+      );
+  
+      res.status(200).json(chatRoom);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/chatrooms/:roomId/messages', async (req, res) => {
+    const { roomId } = req.params;
+  
+    try {
+      const chatRoom = await ChatRoom.findOne({ roomId });
+  
+      if (!chatRoom) {
+        return res.status(404).json({ error: 'Chat room not found' });
+      }
+  
+      res.status(200).json(chatRoom.messages);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Handle recording status
+  socket.on("startRecording", (roomId) => {
+    io.to(roomId).emit("recording-status", { status: "started" });
+  });
+
+  socket.on("stopRecording", (roomId) => {
+    io.to(roomId).emit("recording-status", { status: "stopped" });
   });
 
   socket.on("signal", ({ roomId, signal, to }) => {
