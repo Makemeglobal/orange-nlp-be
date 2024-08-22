@@ -4,7 +4,7 @@ const socketIo = require("socket.io");
 const bodyParser = require("body-parser");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
-const ChatRoom = require("./model/ChatRoom"); // Import the model
+const ChatRoom = require("./model/Chatroom"); // Import the model
 require("dotenv").config();
 const cors = require("cors");
 const { v4: uuidv4 } = require('uuid');
