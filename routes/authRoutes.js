@@ -333,23 +333,8 @@ router.post("/project", authMiddleware, projectController.createProject);
 router.get("/projects", authMiddleware, projectController.getAllProjects);
 
 router.get("/project/:id", authMiddleware, projectController.getProjectById);
-router.get("/dashboard", authMiddleware, async (req, res) => {
-  try {
-    const user = req.user;
-    const Projects = await Project.find({ user: user });
-    const result = {
-      totalRecordings: Projects.length,
-      totalHours: Projects.reduce(
-        (total, project) => total + project.projectDuration / 60,
-        0
-      ),
-    };
-    return res.send({ result: result }).status(200);
-  } catch (err) {
-    console.log(err);
-    return res.send(err);
-  }
-});
+router.get("/dashboard", authMiddleware, projectController.dashboardCount);
+router.get("/analysis", authMiddleware, projectController.analysis);
 
 router.post("/resend-otp", authController.resendOtp);
 
