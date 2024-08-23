@@ -1,6 +1,6 @@
 const Project = require("../model/Project");
 const MeetingNote = require("../model/MeetingNote");
-const Transcription = require("../model/transcription");
+const Transcription = require("../model/Transcription");
 
 exports.createProject = async (req, res) => {
   try {
