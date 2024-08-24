@@ -1,4 +1,4 @@
-const Transcription = require("../model/transcription");
+const Transcription = require("../model/Transcription");
 
 exports.createTranscription = async (req, res) => {
   const { audio_url, text } = req.body;
