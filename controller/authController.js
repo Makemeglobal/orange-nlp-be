@@ -13,6 +13,7 @@ const Stripe = require("stripe");
 const Transaction = require("../model/Transaction");
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+const cloudinary = require("../config/cloudinary");
 
 exports.signup = async (req, res) => {
   const { fullName, country, email, phone, password, invited } = req.body;
@@ -24,7 +25,6 @@ exports.signup = async (req, res) => {
       if (!invited) {
         return res.status(400).json({ message: "User already exists" });
       }
-
     }
 
     const otp = generateOTP();
@@ -45,15 +45,11 @@ exports.resendOtp = async (req, res) => {
   try {
     const userExists = await User.findOne({ email });
 
-
-
     await OTP.deleteMany({ email });
 
-    
     const otp = generateOTP();
 
     await OTP.create({ email, otp });
-
 
     await sendEmail(email, "Resend OTP", `Your new OTP is ${otp}`);
 
@@ -65,13 +61,13 @@ exports.resendOtp = async (req, res) => {
 };
 
 exports.verifyOtpAndCreateUser = async (req, res) => {
-  const { email, otp, fullName, country, phone, password, invited ,token } = req.body;
-  
+  const { email, otp, fullName, country, phone, password, invited, token } =
+    req.body;
 
   try {
     const otpRecord = await OTP.findOne({ email, otp });
-    const otpR= await OTP.find();
-    console.log(otpR)
+    const otpR = await OTP.find();
+    console.log(otpR);
     if (!otpRecord) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
@@ -79,26 +75,25 @@ exports.verifyOtpAndCreateUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     if (invited) {
-
       const decoded = jwt.verify(invited, process.env.JWT_SECRET);
       const { inviterId } = decoded;
       await User.findByIdAndUpdate(inviterId, { $push: { subUsers: email } });
-      const invitedUser = await User.findOne({email:email});
-      console.log(invitedUser)
-   try{
-    const created =  await User.findByIdAndUpdate(invitedUser.id, {
-      fullName,
-      country,
-      phone,
-      password: hashedPassword,
-      userType: "subUser",
-      inviteAccepted: true,
-    });
+      const invitedUser = await User.findOne({ email: email });
+      console.log(invitedUser);
+      try {
+        const created = await User.findByIdAndUpdate(invitedUser.id, {
+          fullName,
+          country,
+          phone,
+          password: hashedPassword,
+          userType: "subUser",
+          inviteAccepted: true,
+        });
 
-    console.log(created)
-   }catch(err){
-    console.log(err)
-   }
+        console.log(created);
+      } catch (err) {
+        console.log(err);
+      }
     } else {
       await User.create({
         fullName,
@@ -111,10 +106,10 @@ exports.verifyOtpAndCreateUser = async (req, res) => {
     }
 
     await OTP.deleteOne({ email, otp });
-    console.log('done')
+    console.log("done");
     res.status(201).json({ message: "User created successfully" });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -236,7 +231,7 @@ exports.acceptInvitation = async (req, res) => {
       .status(201)
       .json({ message: "User created successfully and added as sub-user" });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -300,7 +295,7 @@ exports.resetPassword = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user); 
+    const user = await User.findById(req.user);
     if (!user) {
       return res.status(400).json({ Message: "User not found" });
     }
@@ -325,8 +320,8 @@ exports.updateProfile = async (req, res) => {
 
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user); 
-    console.log(user)
+    const user = await User.findById(req.user);
+    console.log(user);
     if (!user) {
       return res.status(400).json({ Message: "User not found" });
     }
@@ -347,6 +342,26 @@ exports.uploadImage = async (req, res) => {
     success: true,
     imageUrl,
   });
+};
+
+exports.uploadAudio = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).send("No file uploaded.");
+    }
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { resource_type: "auto", public_id: `audio/${Date.now()}` },
+      (error, result) => {
+        if (error) {
+          return res.status(500).send(error.message);
+        }
+        res.json(result);
+      }
+    );
+    uploadStream.end(req.file.buffer);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 };
 
 exports.addPlan = async (req, res) => {
@@ -408,21 +423,19 @@ exports.stripeSession = async (req, res) => {
 exports.stripePaymentStatus = async (req, res) => {
   const sig = req.headers["stripe-signature"];
   const event = req.body;
-  console.log(sig)
+  console.log(sig);
   try {
-  
     const event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
     console.log("event", event);
-    
+
     switch (event.type) {
       case "checkout.session.completed":
         const session = event.data.object;
-       
 
         break;
       case "checkout.session.expired":
         const expiredSession = event.data.object;
-      
+
         console.log(`Session ${expiredSession.id} has expired.`);
 
         break;

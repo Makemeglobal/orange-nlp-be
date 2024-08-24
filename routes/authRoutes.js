@@ -16,7 +16,11 @@ const {
   getTranscription,
   getTranscriptionsByUser,
   updateTranscription,
-deleteTranscription } = require('../controller/TranscriptionController')
+  deleteTranscription,
+} = require("../controller/TranscriptionController");
+const multer = require("multer");
+const storage = multer.memoryStorage();
+const uploadAudio = multer({ storage: storage });
 
 router.post("/signup", authController.signup);
 router.post("/users/sub-users", authController.getSubUsersById);
@@ -353,5 +357,10 @@ router.get("/transcriptions/:id", authMiddleware, getTranscription);
 router.get("/transcriptions", authMiddleware, getTranscriptionsByUser); // New route
 router.put("/transcriptions/:id", authMiddleware, updateTranscription);
 router.delete("/transcriptions/:id", authMiddleware, deleteTranscription);
+router.post(
+  "/upload-audio",
+  uploadAudio.single("audio"),
+  authController.uploadAudio
+);
 
 module.exports = router;
