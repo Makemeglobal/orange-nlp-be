@@ -5,6 +5,7 @@ const authController = require("../controller/authController");
 const upload = require("../middleware/multerConfig");
 const { authMiddleware } = require("../middleware/auth");
 const Feedback = require("../model/Feedback");
+const nodemailer= require('nodemailer')
 const projectController = require("../controller/ProjectController");
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
@@ -225,6 +226,36 @@ router.post("/reset-password", authController.resetPassword);
  */
 router.post("/invite-sub-user", authController.inviteSubUser);
 
+
+router.post('/invite-user', async (req,res) => {
+  console.log('hi')
+  try{
+    const { email ,roomId }= req.body;
+    console.log(email)
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const invitationLink = `https://jot-ai.vercel.app/record?roomId=${roomId}`;
+   
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to:email,
+      subject: 'Invitation to Join as Sub-user',
+      text: `you have been invited to join a meeting. Click the link to accept the invitation: ${invitationLink}`,
+    });
+ 
+  
+    return res.send('invite sent')
+  }
+catch(err){
+  console.log(err)
+}}
+)
 /**
  * @swagger
  * /api/auth/accept-invitation:
@@ -350,7 +381,7 @@ router.delete("/project/:id", projectController.deleteProject);
 
 router.post("/transcriptions", authMiddleware, createTranscription);
 router.get("/transcriptions/:id", authMiddleware, getTranscription);
-router.get("/transcriptions", authMiddleware, getTranscriptionsByUser); // New route
+router.get("/transcriptions", authMiddleware, getTranscriptionsByUser); 
 router.put("/transcriptions/:id", authMiddleware, updateTranscription);
 router.delete("/transcriptions/:id", authMiddleware, deleteTranscription);
 

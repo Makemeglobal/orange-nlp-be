@@ -17,18 +17,24 @@ app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
 
 const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 
-
-
+// API to create a new chat room
 app.post("/api/create-room", async (req, res) => {
   const roomId = uuidv4();
-  const newRoom = new ChatRoom({ roomId,messages:[] });
+  const newRoom = new ChatRoom({ roomId, messages: [] });
   await newRoom.save();
 
   const inviteLink = `${req.protocol}://${req.get('host')}/join/${roomId}`;
   res.json({ roomId, inviteLink });
 });
 
+// API to join an existing chat room
 app.get("/join/:roomId", async (req, res) => {
   const { roomId } = req.params;
   const room = await ChatRoom.findOne({ roomId });
@@ -40,53 +46,85 @@ app.get("/join/:roomId", async (req, res) => {
   }
 });
 
+// API to send messages
+app.post('/api/chatrooms/:roomId/messages', async (req, res) => {
+  const { roomId } = req.params;
+  const { message } = req.body;
+
+  if (!message) {
+    return res.status(400).json({ error: 'Message content is required' });
+  }
+
+  try {
+    const chatRoom = await ChatRoom.findOneAndUpdate(
+      { roomId },
+      { $push: { messages: message } },
+      { new: true, upsert: true }
+    );
+
+    io.to(roomId).emit('new-message', message); 
+
+    res.status(200).json(chatRoom);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// API to fetch messages
+app.get('/api/chatrooms/:roomId/messages', async (req, res) => {
+  const { roomId } = req.params;
+
+  try {
+    const chatRoom = await ChatRoom.findOne({ roomId });
+
+    if (!chatRoom) {
+      return res.status(404).json({ error: 'Chat room not found' });
+    }
+
+    res.status(200).json(chatRoom.messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// WebSocket connection
+io.on('connection', (socket) => {
+  console.log('New client connected:', socket.id
+  );
 
 
-  // app.post('/api/create-room' , async(req,res)=>{
-  //   const 
-  // })
-  app.post('/api/chatrooms/:roomId/messages', async (req, res) => {
-    const { roomId } = req.params;
-    const { message } = req.body;
-  
-    console.log(roomId,message)
-    if (!message) {
-      return res.status(400).json({ error: 'Message content is required' });
-    }
-  
-    try {
-      const chatRoom = await ChatRoom.findOneAndUpdate(
-        { roomId },
-        { $push: { messages: message } },
-        { new: true, upsert: true }
-      );
-  
-      res.status(200).json(chatRoom);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Internal server error' });
-    }
+  // const room = io.sockets.adapter.rooms;
+  // console.log(r/oom.get('jZhGd1ceu1jwbywSAAAB'))
+
+  socket.on('join-room', (roomId) => {
+    console.log(roomId)
+    socket.join(roomId)
+    const room = io.sockets.adapter.rooms.get(roomId);
+    console.log(room)
+    console.log(`Socket ${socket.id} joined room ${roomId}`);
+    socket.emit('room-joined', { roomId, message: `Successfully joined room ${roomId}` });
+
   });
 
-  app.get('/api/chatrooms/:roomId/messages', async (req, res) => {
-    const { roomId } = req.params;
-  
-    try {
-      const chatRoom = await ChatRoom.findOne({ roomId });
-  
-      if (!chatRoom) {
-        return res.status(404).json({ error: 'Chat room not found' });
-      }
-  
-      res.status(200).json(chatRoom.messages);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Internal server error' });
-    }
+  socket.on('leave-room', (roomId) => {
+    socket.leave(roomId);
+    console.log(`Socket ${socket.id} left room ${roomId}`);
   });
 
-  // Handle recording status
- 
+  // Handle receiving transcripts and broadcasting to the room
+  socket.on('send_transcript', ({ roomId, transcript }) => {
+    console.log(transcript)
+    io.to(roomId).emit('receive_transcript', transcript);
+    console.log(`Transcript sent to room ${roomId}: ${transcript}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
+
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
