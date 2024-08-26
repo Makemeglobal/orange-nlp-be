@@ -5,7 +5,7 @@ const authController = require("../controller/authController");
 const upload = require("../middleware/multerConfig");
 const { authMiddleware } = require("../middleware/auth");
 const Feedback = require("../model/Feedback");
-const nodemailer= require('nodemailer')
+const nodemailer = require("nodemailer");
 const projectController = require("../controller/ProjectController");
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
@@ -18,6 +18,10 @@ const {
   getTranscriptionsByUser,
   updateTranscription,
   deleteTranscription,
+  createNote,
+  getAllNotes,
+  updateNote,
+  deleteNote,
 } = require("../controller/TranscriptionController");
 const multer = require("multer");
 const chatRoomController = require("../controller/chatRoomController");
@@ -231,14 +235,13 @@ router.post("/reset-password", authController.resetPassword);
  */
 router.post("/invite-sub-user", authController.inviteSubUser);
 
-
-router.post('/invite-user', async (req,res) => {
-  console.log('hi')
-  try{
-    const { email ,roomId }= req.body;
-    console.log(email)
+router.post("/invite-user", async (req, res) => {
+  console.log("hi");
+  try {
+    const { email, roomId } = req.body;
+    console.log(email);
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -246,21 +249,19 @@ router.post('/invite-user', async (req,res) => {
     });
 
     const invitationLink = `https://jot-ai.vercel.app/record?roomId=${roomId}`;
-   
+
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to:email,
-      subject: 'Invitation to Join as Sub-user',
+      to: email,
+      subject: "Invitation to Join as Sub-user",
       text: `you have been invited to join a meeting. Click the link to accept the invitation: ${invitationLink}`,
     });
- 
-  
-    return res.send('invite sent')
+
+    return res.send("invite sent");
+  } catch (err) {
+    console.log(err);
   }
-catch(err){
-  console.log(err)
-}}
-)
+});
 /**
  * @swagger
  * /api/auth/accept-invitation:
@@ -384,15 +385,18 @@ router.put("/project/:id", projectController.updateProject);
 
 router.delete("/project/:id", projectController.deleteProject);
 
-router.get('/rooms' , chatRoomController.getAllChatRooms);
-router.get('/rooms/:id' ,chatRoomController.getChatRoom);
-router.post('/rooms', chatRoomController.addMessageToChatRoom);
-router.post('/rooms/notes', chatRoomController.addNoteToChatRoom);
-router.get('/rooms/info/:roomId' , chatRoomController.getNotesAndMessagesByChatRoom);
+router.get("/rooms", chatRoomController.getAllChatRooms);
+router.get("/rooms/:id", chatRoomController.getChatRoom);
+router.post("/rooms", chatRoomController.addMessageToChatRoom);
+router.post("/rooms/notes", chatRoomController.addNoteToChatRoom);
+router.get(
+  "/rooms/info/:roomId",
+  chatRoomController.getNotesAndMessagesByChatRoom
+);
 
 router.post("/transcriptions", authMiddleware, createTranscription);
 router.get("/transcriptions/:id", authMiddleware, getTranscription);
-router.get("/transcriptions", authMiddleware, getTranscriptionsByUser); 
+router.get("/transcriptions", authMiddleware, getTranscriptionsByUser);
 router.put("/transcriptions/:id", authMiddleware, updateTranscription);
 router.delete("/transcriptions/:id", authMiddleware, deleteTranscription);
 router.post(
@@ -400,5 +404,10 @@ router.post(
   uploadAudio.single("audio"),
   authController.uploadAudio
 );
+
+router.post("/notes", createNote);
+router.get("/notes/transcription/:transcriptionId", getAllNotes);
+router.put("/notes/:id", updateNote);
+router.delete("/notes/:id", deleteNote);
 
 module.exports = router;
