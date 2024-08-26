@@ -20,6 +20,7 @@ const {
   deleteTranscription,
 } = require("../controller/TranscriptionController");
 const multer = require("multer");
+const chatRoomController = require("../controller/chatRoomController");
 const storage = multer.memoryStorage();
 const uploadAudio = multer({ storage: storage });
 
@@ -382,6 +383,11 @@ router.get(
 router.put("/project/:id", projectController.updateProject);
 
 router.delete("/project/:id", projectController.deleteProject);
+
+router.get('/rooms' , chatRoomController.getAllChatRooms);
+router.get('/rooms/:id' ,chatRoomController.getChatRoom);
+router.post('/rooms', chatRoomController.addMessageToChatRoom);
+router.post('/rooms/notes', chatRoomController.addNoteToChatRoom);
 
 router.post("/transcriptions", authMiddleware, createTranscription);
 router.get("/transcriptions/:id", authMiddleware, getTranscription);
