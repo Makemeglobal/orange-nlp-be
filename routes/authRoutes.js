@@ -388,6 +388,7 @@ router.get('/rooms' , chatRoomController.getAllChatRooms);
 router.get('/rooms/:id' ,chatRoomController.getChatRoom);
 router.post('/rooms', chatRoomController.addMessageToChatRoom);
 router.post('/rooms/notes', chatRoomController.addNoteToChatRoom);
+router.get('/rooms/info/:roomId' , chatRoomController.getNotesAndMessagesByChatRoom);
 
 router.post("/transcriptions", authMiddleware, createTranscription);
 router.get("/transcriptions/:id", authMiddleware, getTranscription);
