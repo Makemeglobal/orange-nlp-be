@@ -3,7 +3,7 @@ const Transcription = require("../model/Transcription");
 
 exports.createTranscription = async (req, res) => {
   const { audio_url, text } = req.body;
-  let userId = req.params.id;
+  let userId = req.user;
   try {
     const newTranscription = await Transcription.create({
       user: userId,
@@ -43,7 +43,7 @@ exports.getTranscription = async (req, res) => {
 };
 
 exports.getTranscriptionsByUser = async (req, res) => {
-  let userId = req.params.id;
+  let userId = req.user;
   try {
     const transcriptions = await Transcription.find({ user: userId });
     res.status(200).json({

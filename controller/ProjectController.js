@@ -81,7 +81,7 @@ exports.getProjectsByMonth = async (req, res) => {
 
 exports.analysis = async (req, res) => {
   try {
-    const userId = req.params.id;
+    const userId = req.user;
 
     // Fetch projects for the user
     const projects = await Project.find({ user: userId });
@@ -138,7 +138,8 @@ exports.analysis = async (req, res) => {
 
 exports.dashboardCount = async (req, res) => {
   try {
-    let user = req.params.id;
+    let user = req.user;
+    console.log("user", user);
     const Projects = await Project.find({ user: user });
     const transcriptions = await Transcription.find({ user: user });
     const result = {
