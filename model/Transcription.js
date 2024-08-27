@@ -14,6 +14,11 @@ const TranscriptionSchema = new Schema(
       required: true, // This field is mandatory
     },
 
+    projectName: {
+      type: String, // Data type is String
+      required: true, // This field is mandatory
+    },
+
     audio_url: {
       type: String, // Data type is String
       required: true, // This field is mandatory

@@ -2,13 +2,14 @@ const ImportAudioNote = require("../model/ImportAudioNote");
 const Transcription = require("../model/Transcription");
 
 exports.createTranscription = async (req, res) => {
-  const { audio_url, text } = req.body;
+  const { audio_url, text, projectName } = req.body;
   let userId = req.user;
   try {
     const newTranscription = await Transcription.create({
       user: userId,
       text: text,
       audio_url,
+      projectName,
     });
 
     res.status(201).json({
@@ -58,7 +59,7 @@ exports.getTranscriptionsByUser = async (req, res) => {
 
 exports.updateTranscription = async (req, res) => {
   const { id } = req.params;
-  const { text, audio_url } = req.body;
+  const { text, audio_url, projectName } = req.body;
 
   try {
     const transcription = await Transcription.findById(id);
@@ -69,6 +70,7 @@ exports.updateTranscription = async (req, res) => {
 
     if (text) transcription.text = text;
     if (audio_url) transcription.audio_url = audio_url;
+    if (projectName) transcription.projectName = projectName;
 
     await transcription.save();
 
