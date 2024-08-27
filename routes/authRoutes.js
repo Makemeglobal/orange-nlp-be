@@ -371,6 +371,8 @@ router.get("/projects", authMiddleware, projectController.getAllProjects);
 
 router.get("/project/:id", authMiddleware, projectController.getProjectById);
 router.get("/dashboard", authMiddleware, projectController.dashboardCount);
+router.post("/search", authMiddleware, projectController.searchAll);
+
 router.get("/analysis", authMiddleware, projectController.analysis);
 
 router.post("/resend-otp", authController.resendOtp);

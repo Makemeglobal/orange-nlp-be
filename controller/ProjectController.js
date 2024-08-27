@@ -82,38 +82,72 @@ exports.getProjectsByMonth = async (req, res) => {
 exports.analysis = async (req, res) => {
   try {
     const userId = req.user;
+    const { filter } = req.query; // Get filter from query parameters
 
-    // Fetch projects for the user
-    const projects = await Project.find({ user: userId });
+    let startDate = new Date();
+    let endDate = new Date();
 
-    // Helper function to get day of the week from a date
-    const getDayName = (date) => {
-      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-      return days[date.getDay()];
-    };
-
-    // Initialize an object to store daily hours
-    const dailyHours = {
-      Sun: 0,
-      Mon: 0,
-      Tue: 0,
-      Wed: 0,
-      Thu: 0,
-      Fri: 0,
-      Sat: 0,
-    };
-
-    projects.forEach((project) => {
-      const projectDate = new Date(project.projectDate);
-      const dayName = getDayName(projectDate);
-
-      // Add project duration to the corresponding day
-      dailyHours[dayName] += project.projectDuration / 60;
+    if (filter === "week") {
+      startDate.setDate(startDate.getDate() - 7);
+      endDate = new Date(); // Current date
+    } else if (filter === "month") {
+      startDate.setDate(startDate.getDate() - 30); // Last 30 days
+      endDate = new Date(); // Current date
+    }
+    const projects = await Project.find({
+      user: userId,
+      projectDate: { $gte: startDate, $lte: endDate },
     });
 
-    // Prepare the response data
-    const labels = Object.keys(dailyHours);
-    const data = labels.map((label) => dailyHours[label]);
+    const formatData = (projects, filter) => {
+      if (filter === "month") {
+        // Initialize daily data for the last 30 days
+        const dailyHours = Array(30).fill(0);
+        const today = new Date();
+
+        projects.forEach((project) => {
+          const projectDate = new Date(project.projectDate);
+          const daysAgo = Math.floor(
+            (today - projectDate) / (1000 * 60 * 60 * 24)
+          );
+          if (daysAgo >= 0 && daysAgo < 30) {
+            dailyHours[daysAgo] += project.projectDuration / 60;
+          }
+        });
+
+        // Create labels for each day from 1 to 30
+        const labels = Array.from({ length: 30 }, (_, i) => `Day ${i + 1}`);
+
+        return {
+          labels,
+          data: dailyHours,
+        };
+      }
+
+      // Default case for 'week' filter
+      const dailyHours = {
+        Sun: 0,
+        Mon: 0,
+        Tue: 0,
+        Wed: 0,
+        Thu: 0,
+        Fri: 0,
+        Sat: 0,
+      };
+
+      projects.forEach((project) => {
+        const projectDate = new Date(project.projectDate);
+        const dayName = getDayName(projectDate);
+        dailyHours[dayName] += project.projectDuration / 60;
+      });
+
+      return {
+        labels: Object.keys(dailyHours),
+        data: Object.values(dailyHours),
+      };
+    };
+
+    const { labels, data } = formatData(projects, filter);
 
     const result = {
       labels,
@@ -133,6 +167,50 @@ exports.analysis = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).send(err);
+  }
+};
+
+exports.searchAll = async (req, res) => {
+  try {
+    let user = req.user;
+    const { projectName } = req.body;
+    if (!user) {
+      return res.status(401).send({ error: "User not authenticated" });
+    }
+    if (!projectName) {
+      return res
+        .status(400)
+        .send({ error: "projectName query parameter is required" });
+    }
+    // Search for projects by projectName and user
+    const projects = await Project.find({
+      projectName: new RegExp(projectName, "i"),
+      // user: user._id,
+    });
+
+    // Search for transcriptions by projectName and user
+    const transcriptions = await Transcription.find({
+      projectName: new RegExp(projectName, "i"),
+      // user: user._id,
+    });
+
+    console.log("transcriptions", transcriptions);
+    // Combine results and add type key
+    const results = [
+      ...projects.map((project) => ({
+        ...project.toObject(),
+        type: "Project",
+      })),
+      ...transcriptions.map((transcription) => ({
+        ...transcription.toObject(),
+        type: "Transcription",
+      })),
+    ];
+
+    return res.status(200).send({ results });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send({ error: "An error occurred while searching" });
   }
 };
 
