@@ -185,13 +185,13 @@ exports.searchAll = async (req, res) => {
     // Search for projects by projectName and user
     const projects = await Project.find({
       projectName: new RegExp(projectName, "i"),
-      // user: user._id,
+      user: user,
     });
 
     // Search for transcriptions by projectName and user
     const transcriptions = await Transcription.find({
       projectName: new RegExp(projectName, "i"),
-      // user: user._id,
+      user: user,
     });
 
     console.log("transcriptions", transcriptions);
