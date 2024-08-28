@@ -39,6 +39,40 @@ exports.signup = async (req, res) => {
   }
 };
 
+exports.googleSignup = async (req, res) => {
+  const { fullName, email, profilePicture, id } = req.body;
+  try {
+    let user = await User.findOne({ email });
+
+    if (user) {
+      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "1h",
+      });
+      res.status(200).json({ user, token });
+    } else {
+      user = new User({
+        fullName,
+        email,
+        profilePicture,
+        socialId: id, // Store the Google ID if using Google login
+        loginType: "google", // Indicate that the login type is Google
+      });
+
+      await user.save();
+
+      // Generate a token for the newly created user
+      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "1h",
+      });
+
+      res.status(200).json({ user, token });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.resendOtp = async (req, res) => {
   const { email } = req.body;
 

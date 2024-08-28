@@ -29,6 +29,8 @@ const storage = multer.memoryStorage();
 const uploadAudio = multer({ storage: storage });
 
 router.post("/signup", authController.signup);
+router.post("/google-signup", authController.googleSignup);
+
 router.post("/users/sub-users", authController.getSubUsersById);
 /**
  * @swagger
