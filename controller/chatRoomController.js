@@ -98,7 +98,7 @@ const chatRoomController = {
         return res.send("no room found").status(404);
       }
       console.log(room);
-      return res.send(room).status(200);
+      return res.send({ data: room }).status(200);
     } catch (err) {
       console.log(err);
       return res.send(err).status(500);

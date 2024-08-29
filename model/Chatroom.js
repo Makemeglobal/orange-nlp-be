@@ -18,6 +18,7 @@ const chatRoomSchema = new mongoose.Schema({
     default: [],
   },
   meetingTitle: { type: String, required: false },
+  summary: { type: String, required: false },
   meetingPurpose: { type: String, required: false },
   participants: [
     {
