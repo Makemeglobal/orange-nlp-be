@@ -93,7 +93,7 @@ const chatRoomController = {
       const { roomId } = req.params;
       console.log(roomId);
 
-      const room = await ChatRoom.find({ roomId: roomId });
+      const room = await ChatRoom.findById({ roomId: roomId });
       if (!room) {
         return res.send("no room found").status(404);
       }
