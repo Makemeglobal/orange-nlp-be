@@ -1,6 +1,7 @@
 const Project = require("../model/Project");
 const MeetingNote = require("../model/MeetingNote");
 const Transcription = require("../model/Transcription");
+const ChatRoom = require("../model/Chatroom");
 
 exports.createProject = async (req, res) => {
   try {
@@ -217,8 +218,7 @@ exports.searchAll = async (req, res) => {
 exports.dashboardCount = async (req, res) => {
   try {
     let user = req.user;
-    console.log("user", user);
-    const Projects = await Project.find({ user: user });
+    const Projects = await ChatRoom.find({ user: user });
     const transcriptions = await Transcription.find({ user: user });
     const result = {
       recordings: Projects.length,

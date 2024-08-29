@@ -389,7 +389,7 @@ router.put("/project/:id", projectController.updateProject);
 
 router.delete("/project/:id", projectController.deleteProject);
 
-router.get("/rooms", chatRoomController.getAllChatRooms);
+router.get("/rooms", authMiddleware, chatRoomController.getAllChatRooms);
 router.get("/rooms/:id", chatRoomController.getChatRoom);
 router.post("/rooms", chatRoomController.addMessageToChatRoom);
 router.post("/rooms/notes", chatRoomController.addNoteToChatRoom);

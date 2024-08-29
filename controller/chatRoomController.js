@@ -32,16 +32,17 @@ const chatRoomController = {
     }
   },
   getAllChatRooms: async (req, res) => {
+    let userId = req.user;
+    console.log("userId", userId);
     try {
-      const rooms = await ChatRoom.find({});
-      if (!rooms) {
-        return res.send("no rooms found").status(404);
-      }
-      return res.send(rooms).send(200);
+      const rooms = await ChatRoom.find({ user: userId });
+      console.log("rooms", rooms);
+      return res.status(200).send({ data: rooms });
     } catch (err) {
-      return res.send(err).status(500);
+      return res.status(err).status(500);
     }
   },
+
   addMessageToChatRoom: async (req, res) => {
     try {
       const { roomId } = req.body;
