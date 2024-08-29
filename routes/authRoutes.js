@@ -391,6 +391,9 @@ router.delete("/project/:id", projectController.deleteProject);
 
 router.get("/rooms", authMiddleware, chatRoomController.getAllChatRooms);
 router.get("/rooms/:id", chatRoomController.getChatRoom);
+router.put("/rooms/:id", chatRoomController.updateChatRoom);
+router.delete("/rooms/:id", chatRoomController.deleteChatRoom);
+
 router.post("/rooms", chatRoomController.addMessageToChatRoom);
 router.post("/rooms/notes", chatRoomController.addNoteToChatRoom);
 router.get(

@@ -121,6 +121,39 @@ const chatRoomController = {
       res.status(500).json({ error: err.message });
     }
   },
+
+  updateChatRoom: async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const { meetingTitle, meetingPurpose } = req.body;
+      const updatedChatRoom = await ChatRoom.findOneAndUpdate(
+        { _id: id },
+        { meetingTitle, meetingPurpose },
+        { new: true }
+      );
+      if (!updatedChatRoom) {
+        return res.status(404).json({ error: "ChatRoom not found" });
+      }
+      res.status(200).json(updatedChatRoom);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  deleteChatRoom: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const chatRoom = await ChatRoom.findOneAndDelete({ _id: id });
+      if (!chatRoom) {
+        return res.status(404).json({ error: "ChatRoom not found" });
+      }
+
+      res.status(200).json({ message: "ChatRoom deleted successfully" });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  },
 };
 
 module.exports = chatRoomController;
