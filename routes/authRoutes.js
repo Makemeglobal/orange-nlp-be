@@ -414,4 +414,6 @@ router.get("/notes/transcription/:transcriptionId", getAllNotes);
 router.put("/notes/:id", updateNote);
 router.delete("/notes/:id", deleteNote);
 
+router.post("/api/create-room", authMiddleware, chatRoomController.createChat);
+
 module.exports = router;
