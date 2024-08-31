@@ -12,6 +12,7 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const bodyParser = require("body-parser");
 const User = require("../model/User");
 const Project = require("../model/Project");
+const ChatRoom = require('../model/Chatroom')
 const {
   createTranscription,
   getTranscription,
@@ -411,5 +412,59 @@ router.post("/notes", createNote);
 router.get("/notes/transcription/:transcriptionId", getAllNotes);
 router.put("/notes/:id", updateNote);
 router.delete("/notes/:id", deleteNote);
+
+
+router.post('/rooms/:roomId/highlights', async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const { text, note,index } = req.body.newHighlight;
+    // console.log(text, note, index )
+
+    const room = await ChatRoom.findOne({ roomId });
+    if (!room) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    const newNote = {
+      text,
+      note,
+   index,
+      timestamp: new Date(),
+    };
+    console.log(newNote)
+
+    room.notes.push(newNote);
+    await room.save();
+
+    res.status(201).json(newNote);
+    console.log( newNote)
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ message: 'Error adding highlight', error });
+  }
+});
+
+
+router.get('/rooms/:roomId/notes-1', async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const chatRoom = await ChatRoom.findOne({ roomId });
+
+    if (!chatRoom) {
+      return res.status(404).json({ error: 'Chat room not found' });
+    }
+    console.log(chatRoom)
+
+    console.log('Notes from DB:', chatRoom.notes);
+    const { notes } = chatRoom;
+    // console.log(notes)
+    res.json(notes);
+  } catch (error) {
+    console.error('Error fetching notes:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+module.exports = router;
 
 module.exports = router;

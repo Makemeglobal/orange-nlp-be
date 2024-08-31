@@ -9,8 +9,11 @@ const chatRoomSchema = new mongoose.Schema({
   },
   notes: {
     type: [{
-      text: { type: String, required: true },
-      note: { type: String, required: true },
+      text: { type: String, required: false },
+      note: { type: String, required: false },
+      index:{
+        type:Number,required:false,
+      },
       timestamp: { type: Date, default: Date.now }
     }],
     default: []
