@@ -1,6 +1,7 @@
 const Project = require("../model/Project");
 const MeetingNote = require("../model/MeetingNote");
 const Transcription = require("../model/Transcription");
+const ChatRoom = require("../model/Chatroom");
 
 exports.createProject = async (req, res) => {
   try {
@@ -174,6 +175,7 @@ exports.searchAll = async (req, res) => {
   try {
     let user = req.user;
     const { projectName } = req.body;
+
     if (!user) {
       return res.status(401).send({ error: "User not authenticated" });
     }
@@ -182,11 +184,6 @@ exports.searchAll = async (req, res) => {
         .status(400)
         .send({ error: "projectName query parameter is required" });
     }
-    // Search for projects by projectName and user
-    const projects = await Project.find({
-      projectName: new RegExp(projectName, "i"),
-      user: user,
-    });
 
     // Search for transcriptions by projectName and user
     const transcriptions = await Transcription.find({
@@ -194,16 +191,25 @@ exports.searchAll = async (req, res) => {
       user: user,
     });
 
-    console.log("transcriptions", transcriptions);
+    // Search for chat rooms by meetingTitle and meetingPurpose and user
+    const chatRooms = await ChatRoom.find({
+      $or: [
+        { meetingTitle: new RegExp(projectName, "i") },
+        { meetingPurpose: new RegExp(projectName, "i") },
+      ],
+      user: user,
+    });
+
     // Combine results and add type key
     const results = [
-      ...projects.map((project) => ({
-        ...project.toObject(),
-        type: "Project",
-      })),
       ...transcriptions.map((transcription) => ({
         ...transcription.toObject(),
         type: "Transcription",
+      })),
+      ...chatRooms.map((chatRoom) => ({
+        ...chatRoom.toObject(),
+        type: "ChatRoom",
+        projectName: chatRoom.meetingTitle,
       })),
     ];
 
@@ -217,8 +223,7 @@ exports.searchAll = async (req, res) => {
 exports.dashboardCount = async (req, res) => {
   try {
     let user = req.user;
-    console.log("user", user);
-    const Projects = await Project.find({ user: user });
+    const Projects = await ChatRoom.find({ user: user });
     const transcriptions = await Transcription.find({ user: user });
     const result = {
       recordings: Projects.length,

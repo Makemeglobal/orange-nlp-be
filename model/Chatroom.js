@@ -1,11 +1,11 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const chatRoomSchema = new mongoose.Schema({
   roomId: { type: String, required: true, unique: true },
   messages: {
-    type: [String], 
+    type: [String],
     required: true,
-    default: [] 
+    default: [],
   },
   notes: {
     type: [{
@@ -17,9 +17,23 @@ const chatRoomSchema = new mongoose.Schema({
       timestamp: { type: Date, default: Date.now }
     }],
     default: []
-  }
+  },
+  meetingTitle: { type: String, required: false },
+  summary: { type: String, required: false },
+  meetingPurpose: { type: String, required: false },
+  participants: [
+    {
+      name: { type: String, required: false },
+      title: { type: String, required: false },
+    },
+  ],
+  user: {
+    type: mongoose.Schema.Types.ObjectId, // Data type is ObjectId
+    ref: "User", // Reference to the 'User' model
+    required: false, // This field is not mandatory
+  },
 });
 
-const ChatRoom = mongoose.model('ChatRoom', chatRoomSchema);
+const ChatRoom = mongoose.model("ChatRoom", chatRoomSchema);
 
 module.exports = ChatRoom;

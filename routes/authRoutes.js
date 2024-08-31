@@ -30,6 +30,8 @@ const storage = multer.memoryStorage();
 const uploadAudio = multer({ storage: storage });
 
 router.post("/signup", authController.signup);
+router.post("/google-signup", authController.googleSignup);
+
 router.post("/users/sub-users", authController.getSubUsersById);
 /**
  * @swagger
@@ -388,8 +390,11 @@ router.put("/project/:id", projectController.updateProject);
 
 router.delete("/project/:id", projectController.deleteProject);
 
-router.get("/rooms", chatRoomController.getAllChatRooms);
+router.get("/rooms", authMiddleware, chatRoomController.getAllChatRooms);
 router.get("/rooms/:id", chatRoomController.getChatRoom);
+router.put("/rooms/:id", chatRoomController.updateChatRoom);
+router.delete("/rooms/:id", chatRoomController.deleteChatRoom);
+
 router.post("/rooms", chatRoomController.addMessageToChatRoom);
 router.post("/rooms/notes", chatRoomController.addNoteToChatRoom);
 router.get(
@@ -465,6 +470,6 @@ router.get('/rooms/:roomId/notes-1', async (req, res) => {
   }
 });
 
-module.exports = router;
+router.post("/create-room", authMiddleware, chatRoomController.createChat);
 
 module.exports = router;
