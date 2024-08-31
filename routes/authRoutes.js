@@ -422,29 +422,33 @@ router.delete("/notes/:id", deleteNote);
 router.post('/rooms/:roomId/highlights', async (req, res) => {
   try {
     const { roomId } = req.params;
-    const { text, note,index } = req.body.newHighlight;
-    // console.log(text, note, index )
-
-    const room = await ChatRoom.findOne({ roomId });
-    if (!room) {
-      return res.status(404).json({ message: 'Room not found' });
-    }
+    const { text, note, index } = req.body.newHighlight;
 
     const newNote = {
       text,
       note,
-   index,
+      index,
       timestamp: new Date(),
     };
-    console.log(newNote)
 
-    room.notes.push(newNote);
-    await room.save();
+    console.log(typeof index ,index)
+
+    // Use updateOne to add the new note to the notes array
+    const updateResult = await ChatRoom.updateOne(
+      { roomId },
+      { $push: { notes: newNote } }
+    );
+    console.log(updateResult)
+    console.log(await ChatRoom.findOne({roomId}))
+
+    if (updateResult.nModified === 0) {
+      return res.status(404).json({ message: 'Room not found or note not added' });
+    }
+
 
     res.status(201).json(newNote);
-    console.log( newNote)
   } catch (error) {
-    console.log(error)
+    console.error(error);
     res.status(500).json({ message: 'Error adding highlight', error });
   }
 });

@@ -12,7 +12,7 @@ const chatRoomSchema = new mongoose.Schema({
       text: { type: String, required: false },
       note: { type: String, required: false },
       index:{
-        type:Number,required:false,
+        type:Number,required:true,
       },
       timestamp: { type: Date, default: Date.now }
     }],
