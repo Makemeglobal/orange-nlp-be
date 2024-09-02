@@ -453,6 +453,26 @@ router.post('/rooms/:roomId/highlights', async (req, res) => {
   }
 });
 
+router.delete('/rooms/:roomId/notes/:noteId', async (req, res) => {
+  try {
+    const { roomId, noteId } = req.params;
+
+    const updateResult = await ChatRoom.updateOne(
+      { roomId },
+      { $pull: { notes: { _id: noteId } } } 
+    );
+
+    if (updateResult.nModified === 0) {
+      return res.status(404).json({ message: 'Room or Note not found' });
+    }
+
+    res.status(200).json({ message: 'Note deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error deleting note', error });
+  }
+});
+
 
 router.get('/rooms/:roomId/notes-1', async (req, res) => {
   try {
