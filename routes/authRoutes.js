@@ -427,7 +427,7 @@ router.post('/rooms/:roomId/highlights', async (req, res) => {
     const newNote = {
       text,
       note,
-      index,
+      messageIndex:index,
       timestamp: new Date(),
     };
 
@@ -482,9 +482,11 @@ router.get('/rooms/:roomId/notes-1', async (req, res) => {
     if (!chatRoom) {
       return res.status(404).json({ error: 'Chat room not found' });
     }
-    console.log(chatRoom)
+    console.log(chatRoom.notes.map((note)=>{
+      console.log(note,note.index)
+    }))
 
-    console.log('Notes from DB:', chatRoom.notes);
+    // console.log('Notes from DB:', chatRoom.notes);
     const { notes } = chatRoom;
     // console.log(notes)
     res.json(notes);
