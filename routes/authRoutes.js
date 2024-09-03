@@ -434,9 +434,18 @@ router.post('/rooms/:roomId/highlights', async (req, res) => {
     console.log(typeof index ,index)
 
     // Use updateOne to add the new note to the notes array
-    const updateResult = await ChatRoom.updateOne(
+   const updateResult= await ChatRoom.updateOne(
       { roomId },
-      { $push: { notes: newNote } }
+      {
+        $push: {
+          notes: {
+            text: text,
+            note: noteId,
+            messageIndex: index,  
+            timestamp: new Date()
+          }
+        }
+      }
     );
     console.log(updateResult)
     console.log(await ChatRoom.findOne({roomId}))
