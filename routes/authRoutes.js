@@ -462,49 +462,49 @@ router.get('/schema/chatroom', (req, res) => {
 router.post('/rooms/:roomId/highlights', async (req, res) => {
   try {
     const { roomId } = req.params;
-    const { text, note, index  } = req.body.newHighlight;
-    const {message} = req.body;
-    console.log(req.body.newHighlight)
+    const { text, note, index } = req.body.newHighlight;
+    const { message } = req.body;
+
+    // Validate input to avoid unwanted entries
+    if (!text || !note || typeof index !== 'number' || !message) {
+      return res.status(400).json({ message: 'Invalid input data' });
+    }
 
     const newNote = {
       text,
       note,
-      messageIndex:index,
-      message:message,
+      messageIndex: index,
+      message,
       timestamp: new Date(),
     };
 
-    console.log(typeof index ,index)
+    // Log the new note to be inserted
+    console.log('New Note to be Added:', newNote);
 
     // Use updateOne to add the new note to the notes array
-   const updateResult= await ChatRoom.updateOne(
+    const updateResult = await ChatRoom.updateOne(
       { roomId },
       {
         $push: {
-          notes: {
-            text: text,
-            note: note,
-            messageIndex: index,  
-            message:message,
-            timestamp: new Date()
-          }
+          notes: newNote
         }
-      },
+      }
     );
-    console.log(updateResult)
-    console.log('saved' ,await ChatRoom.findOne({roomId}))
+
+    console.log('Update Result:', updateResult);
+    console.log('Updated Document:', await ChatRoom.findOne({ roomId }));
 
     if (updateResult.nModified === 0) {
       return res.status(404).json({ message: 'Room not found or note not added' });
     }
 
-
     res.status(201).json(newNote);
   } catch (error) {
-    console.error(error);
+    console.error('Error adding highlight:', error);
     res.status(500).json({ message: 'Error adding highlight', error });
   }
 });
+
 
 router.delete('/rooms/:roomId/notes/:noteId', async (req, res) => {
   try {
