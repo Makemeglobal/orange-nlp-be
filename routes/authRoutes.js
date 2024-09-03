@@ -440,7 +440,7 @@ router.post('/rooms/:roomId/highlights', async (req, res) => {
         $push: {
           notes: {
             text: text,
-            note: noteId,
+            note: note,
             messageIndex: index,  
             timestamp: new Date()
           }
