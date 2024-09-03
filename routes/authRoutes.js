@@ -446,7 +446,8 @@ router.delete("/notes/:id", deleteNote);
 router.post('/rooms/:roomId/highlights', async (req, res) => {
   try {
     const { roomId } = req.params;
-    const { text, note, index ,message } = req.body.newHighlight;
+    const { text, note, index  } = req.body.newHighlight;
+    const {message} = req.body;
 
     const newNote = {
       text,
