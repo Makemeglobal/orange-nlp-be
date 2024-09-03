@@ -446,12 +446,13 @@ router.delete("/notes/:id", deleteNote);
 router.post('/rooms/:roomId/highlights', async (req, res) => {
   try {
     const { roomId } = req.params;
-    const { text, note, index } = req.body.newHighlight;
+    const { text, note, index ,message } = req.body.newHighlight;
 
     const newNote = {
       text,
       note,
       messageIndex:index,
+      message:message,
       timestamp: new Date(),
     };
 
@@ -466,6 +467,7 @@ router.post('/rooms/:roomId/highlights', async (req, res) => {
             text: text,
             note: note,
             messageIndex: index,  
+            message:message,
             timestamp: new Date()
           }
         }
@@ -506,32 +508,34 @@ router.delete('/rooms/:roomId/notes/:noteId', async (req, res) => {
   }
 });
 
-
 router.get('/rooms/:roomId/notes-1', async (req, res) => {
   try {
     const { roomId } = req.params;
     const chatRoom = await mongoose.connection.db.collection('chatrooms').findOne({ roomId });
 
-
     if (!chatRoom) {
       return res.status(404).json({ error: 'Chat room not found' });
     }
 
+    const { notes, messages } = chatRoom;
 
-    // console.log(chatRoom.notes.map((note)=>{
-    //   console.log(note,note.index)
-    // }))
-    console.log(chatRoom)
+    const result = notes.map(note => {
+      const messageIndex = messages.indexOf(note.message);
 
-    // console.log('Notes from DB:', chatRoom.notes);
-    const { notes } = chatRoom;
-    // console.log(notes)
-    res.json(notes);
+      // Return a new note object with the messageIndex field
+      return {
+        ...note,
+        index: messageIndex !== -1 ? messageIndex : null // Set to null if the message is not found
+      };
+    });
+
+    res.json(result);
   } catch (error) {
     console.error('Error fetching notes:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 router.post("/create-room", authMiddleware, chatRoomController.createChat);
 
