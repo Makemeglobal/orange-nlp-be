@@ -403,6 +403,21 @@ router.get(
   chatRoomController.getNotesAndMessagesByChatRoom
 );
 
+router.delete('/drop-collection/:collectionName', async (req, res) => {
+  const { collectionName } = req.params;
+
+  try {
+    const result = await mongoose.connection.collection(collectionName).drop();
+    res.send(`Collection ${collectionName} dropped successfully.`);
+  } catch (error) {
+    if (error.message === 'ns not found') {
+      res.status(404).send(`Collection ${collectionName} does not exist.`);
+    } else {
+      res.status(500).send(`Error dropping collection: ${error.message}`);
+    }
+  }
+});
+
 router.get('/chatrooms-all', async (req,res) => {
   try{
     const rooms = await ChatRoom.find({});
