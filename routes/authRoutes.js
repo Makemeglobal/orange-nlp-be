@@ -464,6 +464,7 @@ router.post('/rooms/:roomId/highlights', async (req, res) => {
     const { roomId } = req.params;
     const { text, note, index  } = req.body.newHighlight;
     const {message} = req.body;
+    console.log(req.body.newHighlight)
 
     const newNote = {
       text,
