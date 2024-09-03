@@ -12,6 +12,7 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const bodyParser = require("body-parser");
 const User = require("../model/User");
 const Project = require("../model/Project");
+const mongoose = require('mongoose')
 const ChatRoom = require('../model/Chatroom')
 const {
   createTranscription,
@@ -402,6 +403,14 @@ router.get(
   chatRoomController.getNotesAndMessagesByChatRoom
 );
 
+router.get('/chatrooms-all', async (req,res) => {
+  try{
+    const rooms = await ChatRoom.find({});
+    return res.send(rooms);
+  }catch(err){
+    console.log(err);
+  }
+})
 router.post("/transcriptions", authMiddleware, createTranscription);
 router.get("/transcriptions/:id", authMiddleware, getTranscription);
 router.get("/transcriptions", authMiddleware, getTranscriptionsByUser);
@@ -445,10 +454,10 @@ router.post('/rooms/:roomId/highlights', async (req, res) => {
             timestamp: new Date()
           }
         }
-      }
+      },
     );
     console.log(updateResult)
-    console.log(await ChatRoom.findOne({roomId}))
+    console.log('saved' ,await ChatRoom.findOne({roomId}))
 
     if (updateResult.nModified === 0) {
       return res.status(404).json({ message: 'Room not found or note not added' });
@@ -486,14 +495,18 @@ router.delete('/rooms/:roomId/notes/:noteId', async (req, res) => {
 router.get('/rooms/:roomId/notes-1', async (req, res) => {
   try {
     const { roomId } = req.params;
-    const chatRoom = await ChatRoom.findOne({ roomId });
+    const chatRoom = await mongoose.connection.db.collection('chatrooms').findOne({ roomId });
+
 
     if (!chatRoom) {
       return res.status(404).json({ error: 'Chat room not found' });
     }
-    console.log(chatRoom.notes.map((note)=>{
-      console.log(note,note.index)
-    }))
+
+
+    // console.log(chatRoom.notes.map((note)=>{
+    //   console.log(note,note.index)
+    // }))
+    console.log(chatRoom)
 
     // console.log('Notes from DB:', chatRoom.notes);
     const { notes } = chatRoom;

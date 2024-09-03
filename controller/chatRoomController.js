@@ -16,6 +16,7 @@ const chatRoomController = {
     });
     await newRoom.save();
     const inviteLink = `${req.protocol}://${req.get("host")}/join/${roomId}`;
+    console.log(newRoom)
     res.json({ roomId, inviteLink });
   },
 
