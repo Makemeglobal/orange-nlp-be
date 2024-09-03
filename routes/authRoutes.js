@@ -443,6 +443,22 @@ router.put("/notes/:id", updateNote);
 router.delete("/notes/:id", deleteNote);
 
 
+router.get('/schema/chatroom', (req, res) => {
+  try {
+    // Get the schema object from the ChatRoom model
+    const schema = ChatRoom.schema;
+
+    // Convert schema to a readable format
+    const schemaDefinition = schema.obj;
+
+    // Send the schema definition as JSON response
+    res.json(schemaDefinition);
+  } catch (error) {
+    console.error('Error fetching schema:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 router.post('/rooms/:roomId/highlights', async (req, res) => {
   try {
     const { roomId } = req.params;
