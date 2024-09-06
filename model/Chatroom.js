@@ -8,16 +8,18 @@ const chatRoomSchema = new mongoose.Schema({
     default: [],
   },
   notes: {
-    type: [{
-      text: { type: String, required: false },
-      note: { type: String, required: false },
-      messageIndex:{
-        type:Number,required:true,
+    type: [
+      {
+        text: { type: String, required: false },
+        note: { type: String, required: false },
+        index: {
+          type: Number,
+        },
+        message: { type: String },
+        timestamp: { type: Date, default: Date.now },
       },
-      message:{type:String},
-      timestamp: { type: Date, default: Date.now }
-    }],
-    default: []
+    ],
+    default: [],
   },
   meetingTitle: { type: String, required: false },
   summary: { type: String, required: false },
