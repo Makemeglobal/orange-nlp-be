@@ -29,13 +29,9 @@ exports.getTranscription = async (req, res) => {
     if (!transcription) {
       return res.status(400).json({ message: "Transcription not found" });
     }
-    const notes = await ImportAudioNote.find({
-      transcription: id,
-    }).populate("transcription");
     res.status(200).json({
       success: true,
       transcription,
-      notes,
     });
   } catch (error) {
     console.error("Error fetching transcription:", error);
@@ -59,21 +55,19 @@ exports.getTranscriptionsByUser = async (req, res) => {
 
 exports.updateTranscription = async (req, res) => {
   const { id } = req.params;
-  const { text, audio_url, projectName } = req.body;
-
+  const { text, audio_url, projectName, notes } = req.body;
+  console.log("notes", notes);
   try {
     const transcription = await Transcription.findById(id);
 
     if (!transcription) {
       return res.status(400).json({ message: "Transcription not found" });
     }
-
     if (text) transcription.text = text;
     if (audio_url) transcription.audio_url = audio_url;
     if (projectName) transcription.projectName = projectName;
-
+    if (notes) transcription.notes = notes;
     await transcription.save();
-
     res.status(200).json({
       message: "Transcription updated successfully",
       transcription,

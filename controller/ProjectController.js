@@ -7,7 +7,6 @@ exports.createProject = async (req, res) => {
   try {
     const user = req.user;
 
-    console.log(user);
     const meetingNotes = await MeetingNote.insertMany(req.body.meetingNotes);
     const project = new Project({
       projectName: req.body.projectName,

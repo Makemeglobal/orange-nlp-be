@@ -16,7 +16,6 @@ const chatRoomController = {
     });
     await newRoom.save();
     const inviteLink = `${req.protocol}://${req.get("host")}/join/${roomId}`;
-    console.log(newRoom)
     res.json({ roomId, inviteLink });
   },
 
@@ -48,9 +47,6 @@ const chatRoomController = {
     try {
       const { roomId } = req.body;
       const { message } = req.body;
-
-      console.log(roomId, message);
-
       const chatRoom = await ChatRoom.findOneAndUpdate(
         { roomId },
         { $push: { messages: message } },
@@ -61,7 +57,6 @@ const chatRoomController = {
         return res.status(404).json({ error: "ChatRoom not found" });
       }
 
-      console.log(chatRoom);
       res.status(200).json(chatRoom);
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -82,7 +77,6 @@ const chatRoomController = {
       if (!chatRoom) {
         return res.status(404).json({ error: "ChatRoom not found" });
       }
-      console.log(chatRoom);
 
       res.status(200).json(chatRoom);
     } catch (err) {
@@ -99,7 +93,6 @@ const chatRoomController = {
       if (!room) {
         return res.send("no room found").status(404);
       }
-      console.log(room);
       return res.send({ data: room }).status(200);
     } catch (err) {
       console.log(err);

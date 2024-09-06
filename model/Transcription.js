@@ -23,6 +23,17 @@ const TranscriptionSchema = new Schema(
       type: String, // Data type is String
       required: true, // This field is mandatory
     },
+    notes: {
+      type: [
+        {
+          text: { type: String },
+          note: { type: String },
+          end: { type: String },
+          start: { type: String },
+        },
+      ],
+      default: [],
+    },
   },
   {
     timestamps: true, // Automatically add 'createdAt' and 'updatedAt' fields
