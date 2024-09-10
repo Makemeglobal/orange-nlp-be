@@ -554,6 +554,47 @@ router.get('/rooms/:roomId/notes-1', async (req, res) => {
   }
 });
 
+router.post('/rooms/:roomId/participants', async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const { name, title } = req.body.participant;
+
+    // Validate input to avoid unwanted entries
+    if (!name || !title) {
+      return res.status(400).json({ message: 'Invalid input data' });
+    }
+
+    const newParticipant = {
+      name,
+      title,
+    };
+
+    console.log('New Participant to be Added:', newParticipant);
+
+    const updateResult = await ChatRoom.updateOne(
+      { roomId },
+      {
+        $push: {
+          participants: newParticipant
+        }
+      }
+    );
+
+    console.log('Update Result:', updateResult);
+    console.log('Updated Document:', await ChatRoom.findOne({ roomId }));
+
+    if (updateResult.nModified === 0) {
+      return res.status(404).json({ message: 'Room not found or participant not added' });
+    }
+
+    res.status(201).json(newParticipant);
+  } catch (error) {
+    console.error('Error adding participant:', error);
+    res.status(500).json({ message: 'Error adding participant', error });
+  }
+});
+
+
 
 router.post("/create-room", authMiddleware, chatRoomController.createChat);
 
