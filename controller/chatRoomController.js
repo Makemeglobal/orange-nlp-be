@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require("uuid");
 
 const chatRoomController = {
   createChat: async (req, res) => {
-    const { meetingName, meetingPurpose, participants } = req.body;
+    const { meetingName, meetingPurpose, participants, meetingType } = req.body;
     let userId = req.user;
     const roomId = uuidv4();
     const newRoom = new ChatRoom({
@@ -13,6 +13,7 @@ const chatRoomController = {
       meetingPurpose,
       participants,
       user: userId,
+      meetingType: meetingType,
     });
     await newRoom.save();
     const inviteLink = `${req.protocol}://${req.get("host")}/join/${roomId}`;

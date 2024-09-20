@@ -22,6 +22,7 @@ const chatRoomSchema = new mongoose.Schema(
       ],
       default: [],
     },
+    meetingType: { type: String, required: false },
     meetingTitle: { type: String, required: false },
     summary: { type: String, required: false },
     meetingPurpose: { type: String, required: false },
