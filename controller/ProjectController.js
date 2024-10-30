@@ -144,7 +144,7 @@ function getDayName(date) {
       projects.forEach((project) => {
         const projectDate = new Date(project.projectDate);
         const dayName = getDayName(projectDate);
-        dailyHours[dayName] += project.projectDuration;
+        dailyHours[dayName] += project.projectDuration *100;
       });
 
       return {
