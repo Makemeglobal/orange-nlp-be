@@ -135,6 +135,12 @@ exports.analysis = async (req, res) => {
         Sat: 0,
       };
 
+      
+function getDayName(date) {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return days[date.getDay()];
+}
+
       projects.forEach((project) => {
         const projectDate = new Date(project.projectDate);
         const dayName = getDayName(projectDate);
