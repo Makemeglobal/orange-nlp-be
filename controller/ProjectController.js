@@ -2,6 +2,7 @@ const Project = require("../model/Project");
 const MeetingNote = require("../model/MeetingNote");
 const Transcription = require("../model/Transcription");
 const ChatRoom = require("../model/Chatroom");
+const User = require("../model/User");
 
 exports.createProject = async (req, res) => {
   try {
@@ -84,6 +85,8 @@ exports.analysis = async (req, res) => {
     const userId = req.user;
     const { filter } = req.query; // Get filter from query parameters
 
+    console.log(userId);
+    console.log(await User.findOne({_id:userId}))
     let startDate = new Date();
     let endDate = new Date();
 
@@ -94,6 +97,9 @@ exports.analysis = async (req, res) => {
       startDate.setDate(startDate.getDate() - 30); // Last 30 days
       endDate = new Date(); // Current date
     }
+
+    console.log(startDate,endDate, "dates")
+    console.log(await Project.find({user:userId}));
     const projects = await Project.find({
       user: userId,
       projectDate: { $gte: startDate, $lte: endDate },
@@ -140,10 +146,13 @@ function getDayName(date) {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     return days[date.getDay()];
 }
+console.log(projects ,"projects")
 
       projects.forEach((project) => {
         const projectDate = new Date(project.projectDate);
+        console.log("projectdate", projectDate);
         const dayName = getDayName(projectDate);
+        console.log("dayname" ,dayName);
         dailyHours[dayName] += project.projectDuration *100;
       });
 
