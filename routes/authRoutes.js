@@ -369,6 +369,15 @@ router.post(
   authController.stripePaymentStatus
 );
 
+router.get("/user/id" , async(req,res)=> {
+  try{
+    const user = await User.findById(req.body.userId);
+    return res.send(user);
+  }catch(err){
+    console.log(err);
+    return res.send(err)
+  }
+})
 router.post("/project", authMiddleware, projectController.createProject);
 
 router.get("/projects", authMiddleware, projectController.getAllProjects);
@@ -402,6 +411,34 @@ router.get(
   "/rooms/info/:roomId",
   chatRoomController.getNotesAndMessagesByChatRoom
 );
+
+router.post('/add-duration', async (req, res) => {
+  const { roomId, duration } = req.body;
+
+
+  if (!roomId || duration == null) {
+    return res.status(400).json({ message: 'roomId and duration are required.' });
+  }
+
+  try {
+  
+    const chatRoom = await ChatRoom.findOne({ roomId });
+
+    if (!chatRoom) {
+      return res.status(404).json({ message: 'Chat room not found.' });
+    }
+
+    
+    chatRoom.meetingDuration = (chatRoom.meetingDuration || 0) + duration;
+
+    await chatRoom.save();
+
+    res.status(200).json({ message: 'Duration added successfully.', chatRoom });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error.', error });
+  }
+});
 
 router.delete('/drop-collection/:collectionName', async (req, res) => {
   const { collectionName } = req.params;

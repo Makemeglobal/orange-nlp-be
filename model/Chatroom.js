@@ -37,6 +37,9 @@ const chatRoomSchema = new mongoose.Schema(
       ref: "User", // Reference to the 'User' model
       required: false, // This field is not mandatory
     },
+    
+    meetingDuration: { type: Number, required: false },
+    
   },
   {
     timestamps: true, // This will add createdAt and updatedAt fields
