@@ -386,7 +386,119 @@ router.get("/project/:id", authMiddleware, projectController.getProjectById);
 router.get("/dashboard", authMiddleware, projectController.dashboardCount);
 router.post("/search", authMiddleware, projectController.searchAll);
 
-router.get("/analysis", authMiddleware, projectController.analysis);
+router.get("/analysis-1", authMiddleware, projectController.analysis);
+router.get('/analysis', authMiddleware,
+ async (req, res) => {
+  try {
+    const userId = req.user;
+    const { filter } = req.query;
+    console.log(filter)
+
+    console.log(userId);
+    console.log(await User.findOne({_id: userId}));
+
+    let startDate = new Date();
+    let endDate = new Date();
+
+ 
+    if (filter === "week") {
+      startDate.setDate(startDate.getDate() - 7);
+    } else if (filter === "month") {
+      startDate.setDate(startDate.getDate() - 30); 
+    }
+
+    console.log(startDate, endDate, "dates");
+
+  
+    const chatRooms = await ChatRoom.find({
+      user: userId,
+      createdAt: { $gte: startDate, $lte: endDate },
+    });
+
+    // Format data for analysis
+    const formatData = (chatRooms, filter) => {
+      if (filter === "month") {
+        // Initialize daily data for the last 30 days
+        const dailyMinutes = Array(30).fill(0);
+        const today = new Date();
+
+        chatRooms.forEach((chatRoom) => {
+          const createdAt = new Date(chatRoom.createdAt);
+          const daysAgo = Math.floor(
+            (today - createdAt) / (1000 * 60 * 60 * 24)
+          );
+          console.log(daysAgo,"daysago")
+          if (daysAgo >= 0 && daysAgo < 30) {
+            dailyMinutes[daysAgo] += chatRoom.meetingDuration; 
+          }
+        });
+
+        const labels = Array.from({ length: 30 }, (_, i) => `Day ${i + 1}`);
+
+        return {
+          labels,
+          data: dailyMinutes,
+        };
+      }
+
+
+      const dailyMinutes = {
+        Sun: 0,
+        Mon: 0,
+        Tue: 0,
+        Wed: 0,
+        Thu: 0,
+        Fri: 0,
+        Sat: 0,
+      };
+
+      const getDayName = (date) => {
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        return days[date.getDay()];
+      };
+
+      console.log(chatRooms, "chat rooms");
+
+      chatRooms.forEach((chatRoom) => {
+        const createdAt = new Date(chatRoom.createdAt);
+        console.log(createdAt,"createdat")
+        const dayName = getDayName(createdAt);
+      
+
+        dailyMinutes[dayName] += Number(chatRoom?.meetingDuration); 
+        console.log(dailyMinutes,dailyMinutes[dayName],dayName,"dailyminutes")
+      });
+
+      return {
+        labels: Object.keys(dailyMinutes),
+        data: Object.values(dailyMinutes),
+      };
+    };
+
+    const { labels, data } = formatData(chatRooms, filter);
+
+    const result = {
+      labels,
+      datasets: [
+        {
+          categoryPercentage: 1.0,
+          barPercentage: 0.2,
+          label: "Duration (minutes)",
+          data,
+          borderColor: "rgb(53, 162, 235)",
+          backgroundColor: "#0057FF",
+        },
+      ],
+    };
+
+    return res.status(200).send({ result });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
+});
+
+
 
 router.post("/resend-otp", authController.resendOtp);
 
@@ -416,6 +528,7 @@ router.post('/add-duration', async (req, res) => {
   const { roomId, duration } = req.body;
 
 
+  console.log(roomId,duration)
   if (!roomId || duration == null) {
     return res.status(400).json({ message: 'roomId and duration are required.' });
   }
@@ -429,7 +542,7 @@ router.post('/add-duration', async (req, res) => {
     }
 
     
-    chatRoom.meetingDuration = (chatRoom.meetingDuration || 0) + duration;
+    chatRoom.meetingDuration =  duration;
 
     await chatRoom.save();
 

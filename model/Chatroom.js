@@ -38,7 +38,7 @@ const chatRoomSchema = new mongoose.Schema(
       required: false, // This field is not mandatory
     },
     
-    meetingDuration: { type: Number, required: false },
+    meetingDuration: { type: Number, required: false,default:0 },
     
   },
   {
