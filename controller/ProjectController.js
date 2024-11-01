@@ -238,11 +238,12 @@ exports.dashboardCount = async (req, res) => {
   try {
     let user = req.user;
     const Projects = await ChatRoom.find({ user: user });
+   
     const transcriptions = await Transcription.find({ user: user });
     const result = {
       recordings: Projects.length,
       totalHours: Projects.reduce(
-        (total, project) => total + project.projectDuration / 60,
+        (total, project) => total + project.meetingDuration ,
         0
       ),
       transcriptions: transcriptions.length,
