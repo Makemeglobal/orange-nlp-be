@@ -746,6 +746,6 @@ router.post('/rooms/:roomId/participants', async (req, res) => {
 
 
 
-router.post("/create-room", authMiddleware, chatRoomController.createChat);
+router.post("/create-room", chatRoomController.createChat);
 
 module.exports = router;

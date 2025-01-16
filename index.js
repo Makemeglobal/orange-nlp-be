@@ -18,6 +18,8 @@ app.use("/api/auth", authRoutes);
 
 const server = http.createServer(app);
 const io = socketIo(server, {
+
+  
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
