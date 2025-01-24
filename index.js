@@ -8,6 +8,9 @@ const ChatRoom = require("./model/Chatroom"); // Import the model
 require("dotenv").config();
 const cors = require("cors");
 const socketHandler = require("./controller/socketHandler");
+const { ExpressPeerServer } = require('peer');
+
+
 
 connectDB();
 const app = express();
@@ -17,6 +20,12 @@ app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
 
 const server = http.createServer(app);
+const peerServer = ExpressPeerServer(server, {
+  debug: true, // Enable debug logs
+  path: '/myapp', // Custom path for PeerJS
+});
+app.use('/peerjs', peerServer);
+
 const io = socketIo(server, {
 
   

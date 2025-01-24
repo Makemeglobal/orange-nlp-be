@@ -3,6 +3,8 @@ const ChatRoom = require("../model/Chatroom");
 module.exports = (io) => {
   io.on("connection", (socket) => {
     console.log("New client connected:", socket.id);
+
+    // Joining a room
     socket.on("join-room", (roomId) => {
       socket.join(roomId);
       console.log(`Socket ${socket.id} joined room ${roomId}`);
@@ -12,11 +14,13 @@ module.exports = (io) => {
       });
     });
 
+    // Leaving a room
     socket.on("leave-room", (roomId) => {
       socket.leave(roomId);
       console.log(`Socket ${socket.id} left room ${roomId}`);
     });
 
+    // Updating a chatroom
     socket.on("update-chatroom", async (roomId, updates) => {
       try {
         const updatedChatRoom = await ChatRoom.findOneAndUpdate(
@@ -36,6 +40,12 @@ module.exports = (io) => {
       }
     });
 
+    socket.on('voice-data', (data) => {
+      // Broadcast to all users except the sender
+      console.log('data',data);
+      socket.broadcast.emit('voice-data', data);
+    });
+    // Handle disconnection
     socket.on("disconnect", () => {
       console.log("Client disconnected:", socket.id);
     });
