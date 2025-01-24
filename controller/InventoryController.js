@@ -1,0 +1,221 @@
+const express = require("express");
+const mongoose = require("mongoose");
+const Inventory = require("../model/Inventory"); // Adjust path if necessary
+
+const Brand = require("../model/Brand");
+const Category = require("../model/Category");
+// Create a new Inventory
+exports.createInventory = async (req, res) => {
+  try {
+    const { brand, category, itemName, description, quantity,image, currentStockStatus } = req.body;
+    console.log("req,file",req.file);
+ 
+
+    const newInventory = new Inventory({
+      brand,
+      category,
+      itemName,
+      description,
+      quantity,
+      imageUrl:image,
+      currentStockStatus,
+    });
+
+    const savedInventory = await newInventory.save();
+    res.status(201).json(savedInventory);
+  } catch (err) {
+    console.log('err',err);
+    res.status(400).json({ error: err.message });
+  }
+};
+
+// Get all Inventorys (excluding soft-deleted ones)
+exports.getAllInventorys = async (req, res) => {
+    try {
+      const inventoryItems = await Inventory.find({ is_deleted: false })
+        .populate("brand category"); // Populating brand and category fields
+  
+        console.log('image urls',inventoryItems)
+      const formattedItems = inventoryItems.map((item) => ({
+        id: item._id,
+        productId: item.productId, // Assuming 'productId' exists on the item
+        itemName: item.itemName,
+        img: item.imageUrl || "/images/default-image.svg", // Fallback if image is not available
+        brand: item.brand?.brandName || "Unknown Brand", // Extract brandName from populated brand
+        category: item.category?.categoryName || "Unknown Category", // Extract categoryName from populated category
+        quantity: item.quantity,
+        addedOn: item.createdAt ? item.createdAt.toLocaleDateString() : "N/A", // Format the createdAt field to 'addedOn'
+        lastUpdated: item.updatedAt ? item.updatedAt.toLocaleDateString() : "N/A", // Format the updatedAt field to 'lastUpdated'
+        inStock: item.currentStockStatus, // Assuming 'inStock' exists in the item
+      }));
+  
+      res.status(200).json(formattedItems);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  };
+  
+
+// Get a single Inventory by ID
+exports.getInventoryById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const Item = await Inventory.findOne({ _id: id, is_deleted: false }).populate("brand category");
+
+    if (!Item) {
+      return res.status(404).json({ message: "Inventory not found" });
+    }
+
+    // const updatedItem = {
+    //     ...Item.toObject(),
+    //     brand: Item.brand.brandName,
+    //     category: Item.category.categoryName
+    //   };
+    res.status(200).json(Item);
+  } catch (err) {
+    console.log('err',err)
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Update an Inventory by ID
+exports.updateInventory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedData = req.body;
+
+    const updatedInventory = await Inventory.findOneAndUpdate(
+      { _id: id, is_deleted: false },
+      updatedData,
+      { new: true } // Returns the updated document
+    );
+
+    if (!updatedInventory) {
+      return res.status(404).json({ message: "Inventory not found or already deleted" });
+    }
+
+    res.status(200).json(updatedInventory);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+// Delete an Inventory by ID (hard delete)
+exports.deleteInventory = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedInventory = await Inventory.findByIdAndDelete(id);
+
+    if (!deletedInventory) {
+      return res.status(404).json({ message: "Inventory not found" });
+    }
+
+    res.status(200).json({ message: "Inventory deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Mark Inventory as deleted (soft delete)
+exports.markAsDeleted = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const Item = await Inventory.findOneAndUpdate(
+      { _id: id },
+      { is_deleted: true },
+      { new: true }
+    );
+
+    if (!Item) {
+      return res.status(404).json({ message: "Inventory not found" });
+    }
+
+    res.status(200).json({ message: "Inventory marked as deleted", Item });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Mark Inventory as out of stock
+exports.markAsOutOfStock = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const item = await Inventory.findOne({ _id: id, is_deleted: false });
+
+    if (item) {
+      const updatedItem = await Inventory.findOneAndUpdate(
+        { _id: id, is_deleted: false },
+        { currentStockStatus: !item.currentStockStatus },
+        { new: true } // Return the updated document
+      );
+      console.log("Updated Item:", updatedItem);
+    } else {
+      console.error("Item not found or is deleted.");
+    }
+    
+    if (!item) {
+      return res.status(404).json({ message: "Inventory not found or already deleted" });
+    }
+
+    res.status(200).json({ message: "Inventory marked as out of stock", item });
+  } catch (err) {
+    console.log('err',err)
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+exports.fetchBrands = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = "" } = req.query;
+
+    const searchQuery = search
+      ? { brandName: { $regex: search, $options: "i" } }
+      : {};
+
+    const brands = await Brand.find(searchQuery).select("brandName _id")
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .sort({ brandName: 1 });
+
+    const total = await Brand.countDocuments(searchQuery);
+
+    res.status(200).json({
+      brands,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.fetchCategories = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = "" } = req.query;
+
+    const searchQuery = search
+      ? { categoryName: { $regex: search, $options: "i" } }
+      : {};
+
+    const categories = await Category.find(searchQuery).select("categoryName _id")
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .sort({ categoryName: 1 });
+
+    const total = await Category.countDocuments(searchQuery);
+
+    res.status(200).json({
+      categories,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

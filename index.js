@@ -8,6 +8,7 @@ const ChatRoom = require("./model/Chatroom"); // Import the model
 require("dotenv").config();
 const cors = require("cors");
 const socketHandler = require("./controller/socketHandler");
+const invRoutes= require('./routes/InventoryRoutes');
 
 connectDB();
 const app = express();
@@ -15,6 +16,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
+app.use('/inventory',invRoutes)
 
 const server = http.createServer(app);
 const io = socketIo(server, {
