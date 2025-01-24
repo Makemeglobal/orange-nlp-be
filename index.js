@@ -9,6 +9,9 @@ require("dotenv").config();
 const cors = require("cors");
 const socketHandler = require("./controller/socketHandler");
 const invRoutes= require('./routes/InventoryRoutes');
+const { ExpressPeerServer } = require('peer');
+
+
 
 connectDB();
 const app = express();
@@ -19,6 +22,12 @@ app.use("/api/auth", authRoutes);
 app.use('/inventory',invRoutes)
 
 const server = http.createServer(app);
+const peerServer = ExpressPeerServer(server, {
+  debug: true, // Enable debug logs
+  path: '/myapp', // Custom path for PeerJS
+});
+app.use('/peerjs', peerServer);
+
 const io = socketIo(server, {
 
   
