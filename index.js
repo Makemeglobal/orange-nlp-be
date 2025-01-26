@@ -10,6 +10,7 @@ const cors = require("cors");
 const socketHandler = require("./controller/socketHandler");
 const invRoutes= require('./routes/InventoryRoutes');
 const { ExpressPeerServer } = require('peer');
+const authV2 =  require('./routes/auth.routes.v2')
 
 
 
@@ -20,6 +21,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
 app.use('/inventory',invRoutes)
+app.use('/auth/v2',authV2)
 
 const server = http.createServer(app);
 const peerServer = ExpressPeerServer(server, {
