@@ -14,7 +14,9 @@ exports.addTask = async (req, res) => {
 exports.getTasks = async (req, res) => {
   try {
     const { status, priority, start_date, end_date } = req.query;
-    let filter = {};
+    let filter = {
+        is_deleted:false
+    };
     if (status) filter.status = status;
     if (priority) filter.priority = priority;
     if (start_date || end_date) {
