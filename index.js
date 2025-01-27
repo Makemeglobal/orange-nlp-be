@@ -11,6 +11,7 @@ const socketHandler = require("./controller/socketHandler");
 const invRoutes= require('./routes/InventoryRoutes');
 const { ExpressPeerServer } = require('peer');
 const authV2 =  require('./routes/auth.routes.v2')
+const taskRoutes = require('./routes/task.routes')
 
 
 
@@ -22,6 +23,7 @@ app.use(bodyParser.json());
 app.use("/api/auth", authRoutes);
 app.use('/inventory',invRoutes)
 app.use('/auth/v2',authV2)
+app.use('/tasks',taskRoutes);
 
 const server = http.createServer(app);
 const peerServer = ExpressPeerServer(server, {
