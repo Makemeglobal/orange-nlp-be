@@ -8,7 +8,7 @@ const Category = require("../model/Category");
 exports.createInventory = async (req, res) => {
   try {
     const { brand, category, itemName, description, quantity,image, currentStockStatus } = req.body;
-    console.log("req,file",req.file);
+    console.log("req,file",req.user);
  
 
     const newInventory = new Inventory({
@@ -17,6 +17,7 @@ exports.createInventory = async (req, res) => {
       itemName,
       description,
       quantity,
+      user:req.user,
       imageUrl:image,
       currentStockStatus,
     });
@@ -32,8 +33,10 @@ exports.createInventory = async (req, res) => {
 // Get all Inventorys (excluding soft-deleted ones)
 exports.getAllInventorys = async (req, res) => {
     try {
-      const inventoryItems = await Inventory.find({ is_deleted: false })
-        .populate("brand category"); // Populating brand and category fields
+      const inventoryItems = await Inventory.find({ is_deleted: false, user: req.user })
+      .populate("brand category")
+      .sort({ createdAt: -1 });
+  
   
         console.log('image urls',inventoryItems)
       const formattedItems = inventoryItems.map((item) => ({

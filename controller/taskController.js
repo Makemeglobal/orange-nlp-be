@@ -3,7 +3,7 @@ const Task = require('../model/tasks');
 exports.addTask = async (req, res) => {
   try {
     const { title, description, priority, start_date, end_date } = req.body;
-    const task = await Task.create({ title, description, priority, start_date, end_date });
+    const task = await Task.create({ title, description, priority, start_date, end_date ,user:req.user, });
     res.status(201).json(task);
   } catch (error) {
     console.log(error)
@@ -15,7 +15,8 @@ exports.getTasks = async (req, res) => {
   try {
     const { status, priority, start_date, end_date } = req.query;
     let filter = {
-        is_deleted:false
+        is_deleted:false,
+        user:req.user
     };
     if (status) filter.status = status;
     if (priority) filter.priority = priority;
@@ -24,6 +25,17 @@ exports.getTasks = async (req, res) => {
       filter.end_date = end_date ? { $lte: new Date(end_date) } : undefined;
     }
     const tasks = await Task.find(filter);
+    res.status(200).json(tasks);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching tasks", error });
+  }
+};
+
+exports.getTaskById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const tasks = await Task.findById(id);
     res.status(200).json(tasks);
   } catch (error) {
     res.status(500).json({ message: "Error fetching tasks", error });
