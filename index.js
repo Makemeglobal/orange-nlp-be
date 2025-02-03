@@ -14,6 +14,7 @@ const authV2 =  require('./routes/auth.routes.v2')
 const taskRoutes = require('./routes/task.routes')
 const reviewRoutes = require('./routes/review.routes');
 const contractRoutes = require('./routes/contractRoutes');
+const leadRoutes = require('./routes/leadRoutes');
 
 
 
@@ -28,6 +29,7 @@ app.use('/auth/v2',authV2)
 app.use('/tasks',taskRoutes);
 app.use('/reviews',reviewRoutes)
 app.use("/contracts", contractRoutes);
+app.use("/leads",leadRoutes)
 
 
 const server = http.createServer(app);
