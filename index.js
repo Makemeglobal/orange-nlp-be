@@ -13,6 +13,7 @@ const { ExpressPeerServer } = require('peer');
 const authV2 =  require('./routes/auth.routes.v2')
 const taskRoutes = require('./routes/task.routes')
 const reviewRoutes = require('./routes/review.routes');
+const contractRoutes = require('./routes/contractRoutes');
 
 
 
@@ -26,6 +27,8 @@ app.use('/inventory',invRoutes)
 app.use('/auth/v2',authV2)
 app.use('/tasks',taskRoutes);
 app.use('/reviews',reviewRoutes)
+app.use("/contracts", contractRoutes);
+
 
 const server = http.createServer(app);
 const peerServer = ExpressPeerServer(server, {

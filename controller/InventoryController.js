@@ -30,33 +30,48 @@ exports.createInventory = async (req, res) => {
   }
 };
 
-// Get all Inventorys (excluding soft-deleted ones)
 exports.getAllInventorys = async (req, res) => {
-    try {
-      const inventoryItems = await Inventory.find({ is_deleted: false, user: req.user })
+  try {
+    const { filter, sortBy } = req.query;
+
+    // Base query excluding soft-deleted items and filtering by user
+    let query = { is_deleted: false, user: req.user };
+
+    // Apply filtering conditions
+    if (filter === "in-stock") query.currentStockStatus = true;
+    if (filter === "out-of-stock") query.currentStockStatus = false;
+
+    // Determine sorting order
+    let sortOptions = { createdAt: -1 }; // Default: Newest first
+    if (sortBy === "quantity") sortOptions = { quantity: -1 };
+    if (sortBy === "last-updated") sortOptions = { updatedAt: -1 };
+    if (sortBy === "old-to-new") sortOptions = { createdAt: 1 };
+
+    // Fetch and format inventory items
+    const inventoryItems = await Inventory.find(query)
       .populate("brand category")
-      .sort({ createdAt: -1 });
-  
-  
-        console.log('image urls',inventoryItems)
-      const formattedItems = inventoryItems.map((item) => ({
-        id: item._id,
-        productId: item.productId, // Assuming 'productId' exists on the item
-        itemName: item.itemName,
-        img: item.imageUrl || "/images/default-image.svg", // Fallback if image is not available
-        brand: item.brand?.brandName || "Unknown Brand", // Extract brandName from populated brand
-        category: item.category?.categoryName || "Unknown Category", // Extract categoryName from populated category
-        quantity: item.quantity,
-        addedOn: item.createdAt ? item.createdAt.toLocaleDateString() : "N/A", // Format the createdAt field to 'addedOn'
-        lastUpdated: item.updatedAt ? item.updatedAt.toLocaleDateString() : "N/A", // Format the updatedAt field to 'lastUpdated'
-        inStock: item.currentStockStatus, // Assuming 'inStock' exists in the item
-      }));
-  
-      res.status(200).json(formattedItems);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  };
+      .sort(sortOptions);
+
+    const formattedItems = inventoryItems.map((item) => ({
+      id: item._id,
+      productId: item.productId, 
+      itemName: item.itemName,
+      description: item.description,
+      img: item.imageUrl || "/images/default-image.svg",
+      brand: item.brand?.brandName || "Unknown Brand",
+      category: item.category?.categoryName || "Unknown Category",
+      quantity: item.quantity,
+      addedOn: item.createdAt ? item.createdAt.toLocaleDateString() : "N/A",
+      lastUpdated: item.updatedAt ? item.updatedAt.toLocaleDateString() : "N/A",
+      inStock: item.currentStockStatus, 
+    }));
+
+    res.status(200).json(formattedItems);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
   
 
 // Get a single Inventory by ID
