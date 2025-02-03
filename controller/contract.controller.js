@@ -132,7 +132,7 @@ exports.getTimeline = async (req, res) => {
 
 
 exports.addPaymentMilestone = async (req, res) => {
-    const { contractId } = req.params; // Get contractId from request params
+    const { contractId } = req.params; 
     const { milestoneName, desc, amount, startDate, endDate, status } = req.body;
   
     try {
