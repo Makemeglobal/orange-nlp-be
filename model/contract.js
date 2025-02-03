@@ -6,6 +6,12 @@ const ContractSchema = new mongoose.Schema({
     phone: { type: String, required: true },
     email: { type: String, required: true },
     lastUpdate: { type: Date, default: Date.now },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+      },
+    
     version: [
         {
             version: { type: Number },
@@ -20,6 +26,10 @@ const ContractSchema = new mongoose.Schema({
         }
     ],
     totalPayment: { type: Number, default: 5000 },
+    is_deleted: {
+        type: Boolean,
+        default: false,
+      },
     paymentMilestone: [
         {
             milestoneName: { type: String },
