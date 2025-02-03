@@ -11,6 +11,7 @@ router.post("/", authMiddleware, async (req, res) => {
     await lead.save();
     res.status(201).json(lead);
   } catch (err) {
+    console.log("err",err)
     res.status(400).json({ error: err.message });
   }
 });
@@ -39,6 +40,7 @@ router.get("/:id", async (req, res) => {
 // Update a Lead by ID
 router.put("/:id", async (req, res) => {
   try {
+    req.body.lastUpdated= new Date();
     const lead = await Lead.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!lead) return res.status(404).json({ message: "Lead not found" });
     res.json(lead);
