@@ -44,9 +44,7 @@ exports.googleSignup = async (req, res) => {
     let user = await User.findOne({ email });
 
     if (user) {
-      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-        expiresIn: "1h",
-      });
+      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
       res.status(200).json({ user, token });
     } else {
       user = new User({
@@ -60,9 +58,7 @@ exports.googleSignup = async (req, res) => {
       await user.save();
 
       // Generate a token for the newly created user
-      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-        expiresIn: "1h",
-      });
+      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
 
       res.status(200).json({ user, token });
     }
@@ -163,9 +159,7 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
 
     res.status(200).json({ user, token });
   } catch (error) {
@@ -214,9 +208,7 @@ exports.inviteSubUser = async (req, res) => {
       return res.status(400).json({ message: "Inviter not found" });
     }
 
-    const token = jwt.sign({ email, inviterId }, process.env.JWT_SECRET, {
-      expiresIn: "24h",
-    });
+    const token = jwt.sign({ email, inviterId }, process.env.JWT_SECRET);
     console.log(token);
     const iToken = await InvitationToken.create({
       email,

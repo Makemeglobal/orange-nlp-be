@@ -17,7 +17,7 @@ exports.sendOTP = async (req, res) => {
     res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message ,message:"Failed to send OTP"});
+    res.status(500).json({ error: error.message, message: "Failed to send OTP" });
   }
 };
 
@@ -26,7 +26,7 @@ exports.verifyOTPAndSignup = async (req, res) => {
     const { email, otp, fullName, phone, password, role, businessDetails } =
       req.body;
 
-      console.log("details",email, otp, fullName, phone, password, role, businessDetails)
+    console.log("details", email, otp, fullName, phone, password, role, businessDetails)
     const otpRecord = await OTP.findOne({ email, otp });
     if (!otpRecord) {
       return res.status(400).json({ error: "Invalid or expired OTP" });
@@ -88,10 +88,10 @@ exports.resendOTP = async (req, res) => {
 
     const newOtp = crypto.randomInt(1000, 9999).toString();
 
- 
+
     await OTP.create({ email, otp: newOtp });
 
-    
+
     await sendEmail(email, "OTP Resend", `Your new OTP is: ${newOtp}`);
 
     res.status(200).json({ message: "New OTP sent successfully" });
@@ -121,9 +121,7 @@ exports.login = async (req, res) => {
 
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || "your_secret_key",
-      { expiresIn: "1h" } 
-    );
+      process.env.JWT_SECRET || "your_secret_key");
 
     // Respond with token
     res.status(200).json({
@@ -154,13 +152,13 @@ exports.sendResetPasswordOTP = async (req, res) => {
 
     const otp = crypto.randomInt(1000, 9999).toString();
 
-    
+
     await OTP.deleteOne({ email });
 
-  
+
     await OTP.create({ email, otp });
 
-   
+
     await sendEmail(email, "Reset Password OTP", `Your OTP is: ${otp}`);
 
     res.status(200).json({ message: "OTP sent successfully" });
@@ -185,7 +183,7 @@ exports.verifyOTPAndResetPassword = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    user.password = newPassword; 
+    user.password = newPassword;
     await user.save();
 
     await OTP.deleteOne({ email, otp });
@@ -216,7 +214,7 @@ exports.getUserProfile = async (req, res) => {
 
 exports.getBusinessProfile = async (req, res) => {
   try {
-    const userProfile = await Business.findOne({userId:req.user});
+    const userProfile = await Business.findOne({ userId: req.user });
 
     if (!userProfile) {
       return res.status(404).json({ message: 'Business not found' });
@@ -233,13 +231,13 @@ exports.getBusinessProfile = async (req, res) => {
 exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const userId = req.user; 
+    const userId = req.user;
 
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ message: "Both passwords are required." });
     }
 
-    if (currentPassword==newPassword) {
+    if (currentPassword == newPassword) {
       return res.status(400).json({ message: "New Password can not be same as Old One." });
     }
     const user = await User.findById(userId);
@@ -265,7 +263,7 @@ exports.changePassword = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const userId = req.user; 
+    const userId = req.user;
     const updateFields = req.body; // Get the fields that need to be updated
 
     if (!updateFields || Object.keys(updateFields).length === 0) {
@@ -296,14 +294,14 @@ exports.updateUser = async (req, res) => {
 
 exports.updateBusiness = async (req, res) => {
   try {
-    const userId = req.user; 
+    const userId = req.user;
     const updateFields = req.body; // Get the fields that need to be updated
 
     if (!updateFields || Object.keys(updateFields).length === 0) {
       return res.status(400).json({ message: "No fields provided for update." });
     }
 
-    const updatedUser = await Business.findOneAndUpdate({userId}, updateFields, {
+    const updatedUser = await Business.findOneAndUpdate({ userId }, updateFields, {
       new: true, // Return updated document
       runValidators: true, // Ensure validation rules apply
     });
@@ -327,19 +325,19 @@ exports.updateBusiness = async (req, res) => {
 
 exports.sendResetPasswordOTPWithPassword = async (req, res) => {
   try {
-    const { email, password } = req.body; 
+    const { email, password } = req.body;
 
     const otherUser = await User.findOne({
       email,
-      _id: { $ne: req.user }, 
+      _id: { $ne: req.user },
     });
-    
+
     if (otherUser) {
       return res.status(400).json({ error: "Another user with this email already exists." });
     }
 
-    const user = await User.findOne({  _id: req.user });
-    
+    const user = await User.findOne({ _id: req.user });
+
     if (!user) {
       return res.status(404).json({ error: "User not found." });
     }
@@ -382,7 +380,7 @@ exports.verifyOtpAndUpdateEmail = async (req, res) => {
     }
 
     // Find user and update email
-    const user = await User.findById(req.user );
+    const user = await User.findById(req.user);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
