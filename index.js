@@ -16,6 +16,7 @@ const reviewRoutes = require('./routes/review.routes');
 const contractRoutes = require('./routes/contractRoutes');
 const leadRoutes = require('./routes/leadRoutes');
 const meetingInventoryRoutes = require('./routes/MeetingInventoryRoutes');
+const schedulingCallRoutes = require('./routes/schedulingCallRoutes');
 
 
 connectDB();
@@ -31,6 +32,7 @@ app.use('/reviews',reviewRoutes)
 app.use("/contracts", contractRoutes);
 app.use("/leads",leadRoutes)
 app.use('/meetings', meetingInventoryRoutes);
+app.use('/scheduling-calls',schedulingCallRoutes)
 
 
 const server = http.createServer(app);
