@@ -9,6 +9,7 @@ const MeetingInventorySchema = new Schema({
     url: { type: String },
     email: { type: Schema.Types.ObjectId, ref: 'User' },
     location: { type: String },
+    status: { type: String, default: "upcoming" },
     inventory: [{
         type: Schema.Types.Mixed
     }],
