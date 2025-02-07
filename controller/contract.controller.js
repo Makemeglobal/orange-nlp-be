@@ -21,7 +21,7 @@ exports.getAllContracts = async (req, res) => {
         const contracts = await Contract.find({
             is_deleted: false,
             $or: [
-              { user: req.user._id }, // Match by user ID
+              { user: req.user }, // Match by user ID
               { email: user.email } // Match by email
             ]
           }).populate('user');
