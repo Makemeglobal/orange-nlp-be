@@ -1,4 +1,5 @@
 const ChatRoom = require("../model/Chatroom");
+const Chat = require("../model/ChatPrivate");
 
 module.exports = (io) => {
   io.on("connection", (socket) => {
@@ -20,6 +21,46 @@ module.exports = (io) => {
       console.log(`Socket ${socket.id} left room ${roomId}`);
     });
 
+
+    socket.on("join-private-chat", ({ userId, targetUserId }) => {
+      const privateRoomId = [userId, targetUserId].sort().join("-");
+      socket.join(privateRoomId);
+      console.log(`Socket ${socket.id} joined private room ${privateRoomId}`);
+      socket.emit("private-room-joined", {
+        privateRoomId,
+        message: `Successfully joined private chat with ${targetUserId}`,
+      });
+    });
+
+    // Sending and Saving a Private Message
+    socket.on("private-message", async ({ senderId, receiverId, message }) => {
+      const privateRoomId = [senderId, receiverId].sort().join("-");
+
+      try {
+        // Save message to database
+        const newMessage = new Chat({
+          chatRoomId: privateRoomId,
+          senderId,
+          receiverId,
+          message,
+          timestamp: new Date(),
+        });
+
+        await newMessage.save();
+
+        // Emit message to both users
+        io.to(privateRoomId).emit("private-message", {
+          senderId,
+          receiverId,
+          message,
+          timestamp: newMessage.timestamp,
+        });
+
+        console.log(`Private message from ${senderId} to ${receiverId}: ${message}`);
+      } catch (err) {
+        console.error("Error saving private message:", err);
+      }
+    });
     // Updating a chatroom
     socket.on("update-chatroom", async (roomId, updates) => {
       try {

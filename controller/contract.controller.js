@@ -165,3 +165,57 @@ exports.addPaymentMilestone = async (req, res) => {
     }
   };
   
+
+
+  exports.getVersionsByContract = async (req,res)=>{
+    try{
+        const versions = await Contract.findById(req.params.contractId).select("version");
+        if(!versions){
+            return res.status(404).json({message:'No versions found for this Contract'});
+
+        }
+        return res.status(200).json({message:'fetched versions for the contract',versions});
+
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({message:"Error fetching versions" , message:err.message})
+    }
+  }
+
+
+  exports.updateMilestoneStatus = async (req, res) => {
+    try {
+        const { contractId, milestoneId } = req.params; // Get IDs from request params
+        const { status } = req.body; // Get status from request body
+
+        // Validate status input
+        const validStatuses = ["completed", "pending", "inprogress"];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ message: "Invalid status value" });
+        }
+
+        // Find the contract by ID
+        const contract = await Contract.findById(contractId);
+        if (!contract) {
+            return res.status(404).json({ message: "Contract not found" });
+        }
+
+        // Find the specific milestone by ID
+        const milestone = contract.paymentMilestone.id(milestoneId);
+        if (!milestone) {
+            return res.status(404).json({ message: "Payment milestone not found" });
+        }
+
+        // Update milestone status
+        milestone.status = status;
+        await contract.save(); // Save the updated contract
+
+        return res.status(200).json({
+            message: "Payment milestone status updated successfully",
+            updatedMilestone: milestone,
+        });
+    } catch (error) {
+        console.error("Error updating milestone status:", error);
+        return res.status(500).json({ message: "Server error", error: error.message });
+    }
+};

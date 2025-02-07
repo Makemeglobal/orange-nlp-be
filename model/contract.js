@@ -31,7 +31,7 @@ const ContractSchema = new mongoose.Schema({
         default: false,
       },
     paymentMilestone: [
-        {
+        {    _id: { type: mongoose.Schema.Types.ObjectId, auto: true }, 
             milestoneName: { type: String },
             desc: { type: String },
             amount: { type: Number },

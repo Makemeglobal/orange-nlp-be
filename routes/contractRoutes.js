@@ -1,14 +1,18 @@
 const express = require("express");
 const Contract = require("../model/contract");
 const { authMiddleware } = require("../middleware/auth");
-const { createContract, getAllContracts, addTimeline, getTimeline, addPaymentMilestone, getPaymentMilestones } = require("../controller/contract.controller");
+const { createContract, getAllContracts, addTimeline, getTimeline, addPaymentMilestone, getPaymentMilestones, updateMilestoneStatus, getVersionsByContract,getContractById } = require("../controller/contract.controller");
 
 const router = express.Router();
 router.post('/',authMiddleware,createContract);
 router.get('/',authMiddleware,getAllContracts)
+router.get('/:id',authMiddleware,getContractById)
 router.put('/:contractId/timeline',authMiddleware,addTimeline)
 router.get('/:contractId/timeline',authMiddleware,getTimeline)
 router.put('/:contractId/payment-milestone',authMiddleware,addPaymentMilestone)
 router.get('/:contractId/payment-milestone',authMiddleware,getPaymentMilestones)
+router.put("/:contractId/milestones/:milestoneId/status", updateMilestoneStatus);
+router.get('/:contractId/versions',getVersionsByContract)
+
 
 module.exports = router;

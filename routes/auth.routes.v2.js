@@ -3,6 +3,7 @@ const express = require("express");
 const { sendOTP, verifyOTPAndSignup, resendOTP, login, sendResetPasswordOTP, verifyOTPAndResetPassword, getUserProfile, getBusinessProfile, changePassword, updateUser, updateBusiness, sendResetPasswordOTPWithPassword, verifyOtpAndUpdateEmail } = require("../controller/auth.v2");
 const router = express.Router();
 const { authMiddleware } = require("../middleware/auth");
+const { User } = require("../model/User");
 
 
 
@@ -19,4 +20,16 @@ router.patch('/user/pf',authMiddleware,updateUser)
 router.patch('/biz/pf',authMiddleware,updateBusiness)
 router.post('/send-email-otp',authMiddleware,sendResetPasswordOTPWithPassword)
 router.put('/user/email',authMiddleware, verifyOtpAndUpdateEmail)
+router.get('/user/by-email/:email',async(req,res)=>{
+try{
+    const user = await User.findOne({email:req.params.email});
+    if(!user){
+        return res.status(404).json({message:'User not found'})
+    }
+    return res.status(200).json({message:'User found',userId:user._id});
+}catch(err){
+    console.log(err);
+    return res.status(500).json({err:err.message,message:"Something went wrong"})
+}
+})
 module.exports=router;
