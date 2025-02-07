@@ -1,5 +1,6 @@
 const ChatRoom = require("../model/Chatroom");
 const Chat = require("../model/ChatPrivate");
+const ChatPrivate = require("../model/ChatPrivate");
 
 module.exports = (io) => {
   io.on("connection", (socket) => {
@@ -22,10 +23,22 @@ module.exports = (io) => {
     });
 
 
-    socket.on("join-private-chat", ({ userId, targetUserId }) => {
+    socket.on("join-private-chat", async ({ userId, targetUserId }) => {
       const privateRoomId = [userId, targetUserId].sort().join("-");
       socket.join(privateRoomId);
       console.log(`Socket ${socket.id} joined private room ${privateRoomId}`);
+
+      // Ensure chat room exists or create one
+      let chatRoom = await ChatPrivate.findOne({ chatRoomId: privateRoomId });
+      if (!chatRoom) {
+        chatRoom = new ChatPrivate({
+          chatRoomId: privateRoomId,
+          participants: [userId, targetUserId],
+          messages: [],
+        });
+        await chatRoom.save();
+      }
+
       socket.emit("private-room-joined", {
         privateRoomId,
         message: `Successfully joined private chat with ${targetUserId}`,
@@ -33,27 +46,45 @@ module.exports = (io) => {
     });
 
     // Sending and Saving a Private Message
-    socket.on("private-message", async ({ senderId, receiverId, message }) => {
+    socket.on("private-message", async ({ senderId, receiverId, message, messageType, attachments,roomId }) => {
       const privateRoomId = [senderId, receiverId].sort().join("-");
 
       try {
-        // Save message to database
-        const newMessage = new Chat({
-          chatRoomId: privateRoomId,
+        // Find the chat room and update messages
+        const chatRoom = await ChatPrivate.findOneAndUpdate(
+          { chatRoomId: roomId },
+          {
+            $push: {
+              messages: {
+                senderId,
+                message,
+                messageType: messageType || "text",
+                attachments,
+                timestamp: new Date(),
+                status: "sent",
+              },
+            },
+            $set: {
+              lastMessage: {
+                message,
+                senderId,
+                timestamp: new Date(),
+              },
+            },
+          },
+          { new: true, upsert: true }
+        );
+
+        // Emit the message to both users in the chat room
+        io.to(roomId).emit("private-message", {
           senderId,
           receiverId,
           message,
+          roomId,
+          messageType,
+          attachments,
           timestamp: new Date(),
-        });
-
-        await newMessage.save();
-
-        // Emit message to both users
-        io.to(privateRoomId).emit("private-message", {
-          senderId,
-          receiverId,
-          message,
-          timestamp: newMessage.timestamp,
+          status: "sent",
         });
 
         console.log(`Private message from ${senderId} to ${receiverId}: ${message}`);
@@ -61,6 +92,8 @@ module.exports = (io) => {
         console.error("Error saving private message:", err);
       }
     });
+
+
     // Updating a chatroom
     socket.on("update-chatroom", async (roomId, updates) => {
       try {

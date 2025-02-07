@@ -1,4 +1,5 @@
 const Contract = require('../model/contract');
+const { User } = require('../model/User');
 
 // Create a new contract
 exports.createContract = async (req, res) => {
@@ -16,8 +17,15 @@ exports.createContract = async (req, res) => {
 // Get all contracts
 exports.getAllContracts = async (req, res) => {
     try {
-        const contracts = await Contract.find({ is_deleted: false,user:req.user }).populate('user');
-        res.status(200).json(contracts);
+        const user = await User.findOne({_id:req.user});
+        const contracts = await Contract.find({
+            is_deleted: false,
+            $or: [
+              { user: req.user._id }, // Match by user ID
+              { email: user.email } // Match by email
+            ]
+          }).populate('user');
+                  res.status(200).json(contracts);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

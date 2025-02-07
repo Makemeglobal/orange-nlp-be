@@ -4,6 +4,7 @@ const { sendOTP, verifyOTPAndSignup, resendOTP, login, sendResetPasswordOTP, ver
 const router = express.Router();
 const { authMiddleware } = require("../middleware/auth");
 const { User } = require("../model/User");
+const ChatPrivate = require("../model/ChatPrivate");
 
 
 
@@ -32,4 +33,23 @@ try{
     return res.status(500).json({err:err.message,message:"Something went wrong"})
 }
 })
+
+
+router.get('/message/:chatRoomId', async (req, res) => {
+    try {
+      const { chatRoomId } = req.params;
+  
+      // Find chat room and populate messages
+      const chatRoom = await ChatPrivate.findOne({ chatRoomId }).populate("messages.senderId", "name email");
+  
+      if (!chatRoom) {
+        return res.status(404).json({ message: "Chat room not found" });
+      }
+  
+      res.status(200).json(chatRoom.messages);
+    } catch (error) {
+      console.error("Error fetching chat messages:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  })
 module.exports=router;
