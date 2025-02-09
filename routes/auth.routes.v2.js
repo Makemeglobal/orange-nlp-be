@@ -5,6 +5,8 @@ const router = express.Router();
 const { authMiddleware } = require("../middleware/auth");
 const { User } = require("../model/User");
 const ChatPrivate = require("../model/ChatPrivate");
+const Inventory = require("../model/Inventory");
+const PromoteSchema = require("../model/PromoteSchema");
 
 
 
@@ -52,4 +54,29 @@ router.get('/message/:chatRoomId', async (req, res) => {
       res.status(500).json({ message: "Internal server error" });
     }
   })
+  router.post("/promote", async (req, res) => {
+    try {
+      const { inventoryId, locations, amount } = req.body;
+  
+      // Check if inventory exists
+      const inventory = await Inventory.findById(inventoryId);
+      if (!inventory) {
+        return res.status(404).json({ message: "Inventory item not found" });
+      }
+  
+      // Create new promotion
+      const newPromotion = new PromoteSchema({
+        inventory: inventoryId,
+        locations,
+        amount,
+      });
+  
+      // Save to DB
+      const savedPromotion = await newPromotion.save();
+      res.status(201).json(savedPromotion);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error", error });
+    }
+  });
 module.exports=router;
