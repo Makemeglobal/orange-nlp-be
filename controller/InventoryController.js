@@ -72,6 +72,7 @@ exports.getAllInventorys = async (req, res) => {
   }
 };
 
+
   
 
 // Get a single Inventory by ID
