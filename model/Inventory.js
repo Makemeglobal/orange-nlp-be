@@ -15,6 +15,10 @@ const itemSchema = new mongoose.Schema(
     currentStockStatus: { type: Boolean, default: true },
     imageUrl: { type: String, default: "" },
     is_deleted: { type: Boolean, default: false }, 
+    price:{
+      type:String,
+      required:false
+    }
   },
   {
     timestamps: true, 

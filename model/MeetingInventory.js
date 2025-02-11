@@ -10,8 +10,19 @@ const MeetingInventorySchema = new Schema({
     email: { type: Schema.Types.ObjectId, ref: 'User' },
     location: { type: String },
     status: { type: String, default: "upcoming" },
+  
+     user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: false,
+      },
     inventory: [{
-        type: Schema.Types.Mixed
+        type: Schema.Types.Mixed,
+        inventory_url: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Inventory",
+            required: true,
+          },
     }],
     subtitle: { type: String },
 }, {
