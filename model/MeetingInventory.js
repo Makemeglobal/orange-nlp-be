@@ -8,6 +8,8 @@ const MeetingInventorySchema = new Schema({
     phone: { type: String },
     url: { type: String },
     email: { type: Schema.Types.ObjectId, ref: 'User' },
+    email_id: { type: String },
+
     location: { type: String },
     status: { type: String, default: "upcoming" },
   
@@ -25,6 +27,7 @@ const MeetingInventorySchema = new Schema({
           },
     }],
     subtitle: { type: String },
+    isApproved:{type:Boolean,required:true,default:false}
 }, {
     timestamps: true
 });

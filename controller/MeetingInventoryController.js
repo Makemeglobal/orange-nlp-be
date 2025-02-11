@@ -11,10 +11,11 @@ exports.addMeeting = async (req, res) => {
             end,
             phone,
             url,
-            email: req.user.userId,
+            email:req.user,
             location,
+            email_id:email,
             inventory_url,
-            user:req.user.userId,
+            user:req.user,
             inventory,
             subtitle
         });
@@ -54,7 +55,7 @@ exports.getMeetingById = async (req, res) => {
                 model: 'Inventory'
             })
             .populate({
-                path: 'email',
+                path: 'user',
                 model: 'User'
             });
 
@@ -69,7 +70,7 @@ exports.getMeetingById = async (req, res) => {
         meetingObject.inventory = meetingObject.inventory.filter(item => item.isAvailable === true);
 
         // Keep the user data
-        const user = meetingObject.email || null;
+        const user = meetingObject.user || null;
 
         // Send the response with the filtered inventory and user
         res.status(200).json({ ...meetingObject, user });
@@ -115,11 +116,37 @@ exports.deleteMeeting = async (req, res) => {
 
 exports.getAllMeetings = async (req, res) => {
     try {
+        const usr= await User.findOne({_id:req.user});
         const meetings = await MeetingInventory.find({ 
-            email: req.user._id
+            $or: [
+                { email_id: usr.email ,isApproved:true}, 
+                { user: req.user }
+            ]
         });
+
         res.status(200).json(meetings);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching all meetings', error });
     }
 };
+
+
+exports.approveMeeting = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const meeting = await MeetingInventory.findByIdAndUpdate(
+            id, 
+            { $set: { isApproved: true } }, // Set isApproved to true
+            { new: true } // Return the updated document
+        );
+
+        if (!meeting) {
+            return res.status(404).json({ message: "Meeting not found" });
+        }
+
+        res.status(200).json({ message: "Meeting approved successfully", meeting });
+    } catch (error) {
+        res.status(500).json({ message: "Error approving meeting", error });
+    }
+};
+
