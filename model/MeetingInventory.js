@@ -25,6 +25,7 @@ const MeetingInventorySchema = new Schema({
             ref: "Inventory",
             required: true,
           },
+          
     }],
     subtitle: { type: String },
     isApproved:{type:Boolean,required:true,default:false}
