@@ -150,3 +150,25 @@ exports.approveMeeting = async (req, res) => {
     }
 };
 
+
+
+exports.completeMeeting = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const meeting = await MeetingInventory.findByIdAndUpdate(
+            id, 
+            { $set: { status: "completed" } }, // Set isApproved to true
+            { new: true } // Return the updated document
+        );
+
+        if (!meeting) {
+            return res.status(404).json({ message: "Meeting not found" });
+        }
+
+        res.status(200).json({ message: "Meeting approved successfully", meeting });
+    } catch (error) {
+        res.status(500).json({ message: "Error approving meeting", error });
+    }
+};
+
+
