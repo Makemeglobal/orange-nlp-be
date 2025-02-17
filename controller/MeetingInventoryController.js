@@ -171,4 +171,19 @@ exports.completeMeeting = async (req, res) => {
     }
 };
 
+exports.getFilteredInventories = async (req, res) => {
+    try {
+        const userId = req.user; // Extract user ID from request
+
+        const inventories = await MeetingInventory.find({ user: userId })
+            .select("_id project_Name person_Name") // Select only the required fields
+            .lean(); // Convert Mongoose documents to plain objects
+
+        return res.status(200).json({ success: true, data: inventories });
+    } catch (error) {
+        console.error("Error fetching inventories:", error);
+        return res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
 

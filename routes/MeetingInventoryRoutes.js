@@ -9,6 +9,7 @@ const {
   getAllMeetings,
   approveMeeting,
   completeMeeting,
+  getFilteredInventories
 } = require("../controller/MeetingInventoryController");
 const MeetingInventory = require("../model/MeetingInventory");
 
@@ -23,6 +24,7 @@ router.put("/:id", authMiddleware, updateMeeting);
 router.put("/aprv/:id", authMiddleware, approveMeeting);
 router.put("/complete/:id", authMiddleware, completeMeeting);
 router.delete("/:id", authMiddleware, deleteMeeting);
+router.get('/list/data',authMiddleware,getFilteredInventories)
 router.put("/:meetingId/inventory/:inventoryId", async (req, res) => {
     try {
       const { meetingId, inventoryId } = req.params;

@@ -6,6 +6,7 @@ exports.createContract = async (req, res) => {
     try {
         const userId=req.user;
         req.body.user=userId;
+        console.log('cont',req.body)
         const contract = new Contract(req.body);
         await contract.save();
         res.status(201).json(contract);

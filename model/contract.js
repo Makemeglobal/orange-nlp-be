@@ -5,7 +5,11 @@ const ContractSchema = new mongoose.Schema({
     location: { type: String },
     phone: { type: String, required: true },
     email: { type: String, required: true },
-    
+    quote: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'MeetingInventory',
+        required: false,
+      },
     lastUpdate: { type: Date, default: Date.now },
     user: {
         type: mongoose.Schema.Types.ObjectId,
