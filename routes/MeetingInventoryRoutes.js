@@ -9,7 +9,8 @@ const {
   getAllMeetings,
   approveMeeting,
   completeMeeting,
-  getFilteredInventories
+  getFilteredInventories,
+  addMeetingCreate
 } = require("../controller/MeetingInventoryController");
 const MeetingInventory = require("../model/MeetingInventory");
 const Inventory = require("../model/Inventory");
@@ -18,6 +19,7 @@ const router = express.Router();
 
 // Basic CRUD routes
 router.post("/", authMiddleware, addMeeting);
+router.post("/create", authMiddleware, addMeetingCreate);
 router.get("/all", authMiddleware, getAllMeetings);
 router.get("/", authMiddleware, getMeetings);
 router.get("/:id", authMiddleware, getMeetingById);

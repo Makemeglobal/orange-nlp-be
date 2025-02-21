@@ -26,6 +26,31 @@ exports.addMeeting = async (req, res) => {
     }
 };
 
+exports.addMeetingCreate = async (req, res) => {
+    try {
+        const { project_Name, person_Name, end, phone, url, location, inventory, subtitle ,inventory_url,email} = req.body;
+        console.log('inv',inventory)
+        const meeting = await MeetingInventory.create({ 
+            project_Name, 
+            person_Name, 
+            end,
+            phone,
+            url,
+            email:req.user,
+            location,
+            email_id:email,
+            inventory_url,
+            user:req.user,
+            inventory,
+            subtitle
+        });
+        res.status(201).json(meeting);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error adding meeting', error });
+    }
+};
+
 exports.getMeetings = async (req, res) => {
     try {
         const { endDate } = req.query;
