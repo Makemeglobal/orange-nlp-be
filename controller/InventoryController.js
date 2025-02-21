@@ -7,9 +7,17 @@ const Category = require("../model/Category");
 // Create a new Inventory
 exports.createInventory = async (req, res) => {
   try {
-    const { brand, category, itemName, description, quantity,image, currentStockStatus } = req.body;
-    console.log("req,file",req.user);
- 
+    const {
+      brand,
+      category,
+      itemName,
+      description,
+      price,
+      quantity,
+      image,
+      currentStockStatus,
+    } = req.body;
+    console.log("req,file", req.user);
 
     const newInventory = new Inventory({
       brand,
@@ -17,15 +25,17 @@ exports.createInventory = async (req, res) => {
       itemName,
       description,
       quantity,
-      user:req.user,
-      imageUrl:image,
+      user: req.user,
+      imageUrl: image,
+      price,
+
       currentStockStatus,
     });
 
     const savedInventory = await newInventory.save();
     res.status(201).json(savedInventory);
   } catch (err) {
-    console.log('err',err);
+    console.log("err", err);
     res.status(400).json({ error: err.message });
   }
 };
@@ -54,16 +64,17 @@ exports.getAllInventorys = async (req, res) => {
 
     const formattedItems = inventoryItems.map((item) => ({
       id: item._id,
-      productId: item.productId, 
+      productId: item.productId,
       itemName: item.itemName,
       description: item.description,
       img: item.imageUrl || "/images/default-image.svg",
       brand: item.brand?.brandName || "Unknown Brand",
       category: item.category?.categoryName || "Unknown Category",
       quantity: item.quantity,
+      price:item.price,
       addedOn: item.createdAt ? item.createdAt.toLocaleDateString() : "N/A",
       lastUpdated: item.updatedAt ? item.updatedAt.toLocaleDateString() : "N/A",
-      inStock: item.currentStockStatus, 
+      inStock: item.currentStockStatus,
     }));
 
     res.status(200).json(formattedItems);
@@ -72,14 +83,14 @@ exports.getAllInventorys = async (req, res) => {
   }
 };
 
-
-  
-
 // Get a single Inventory by ID
 exports.getInventoryById = async (req, res) => {
   try {
     const { id } = req.params;
-    const Item = await Inventory.findOne({ _id: id, is_deleted: false }).populate("brand category");
+    const Item = await Inventory.findOne({
+      _id: id,
+      is_deleted: false,
+    }).populate("brand category");
 
     if (!Item) {
       return res.status(404).json({ message: "Inventory not found" });
@@ -92,7 +103,7 @@ exports.getInventoryById = async (req, res) => {
     //   };
     res.status(200).json(Item);
   } catch (err) {
-    console.log('err',err)
+    console.log("err", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -110,7 +121,9 @@ exports.updateInventory = async (req, res) => {
     );
 
     if (!updatedInventory) {
-      return res.status(404).json({ message: "Inventory not found or already deleted" });
+      return res
+        .status(404)
+        .json({ message: "Inventory not found or already deleted" });
     }
 
     res.status(200).json(updatedInventory);
@@ -174,18 +187,19 @@ exports.markAsOutOfStock = async (req, res) => {
     } else {
       console.error("Item not found or is deleted.");
     }
-    
+
     if (!item) {
-      return res.status(404).json({ message: "Inventory not found or already deleted" });
+      return res
+        .status(404)
+        .json({ message: "Inventory not found or already deleted" });
     }
 
     res.status(200).json({ message: "Inventory marked as out of stock", item });
   } catch (err) {
-    console.log('err',err)
+    console.log("err", err);
     res.status(500).json({ error: err.message });
   }
 };
-
 
 exports.fetchBrands = async (req, res) => {
   try {
@@ -195,7 +209,8 @@ exports.fetchBrands = async (req, res) => {
       ? { brandName: { $regex: search, $options: "i" } }
       : {};
 
-    const brands = await Brand.find(searchQuery).select("brandName _id")
+    const brands = await Brand.find(searchQuery)
+      .select("brandName _id")
       .skip((page - 1) * limit)
       .limit(Number(limit))
       .sort({ brandName: 1 });
@@ -221,7 +236,8 @@ exports.fetchCategories = async (req, res) => {
       ? { categoryName: { $regex: search, $options: "i" } }
       : {};
 
-    const categories = await Category.find(searchQuery).select("categoryName _id")
+    const categories = await Category.find(searchQuery)
+      .select("categoryName _id")
       .skip((page - 1) * limit)
       .limit(Number(limit))
       .sort({ categoryName: 1 });

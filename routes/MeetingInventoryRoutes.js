@@ -12,6 +12,7 @@ const {
   getFilteredInventories
 } = require("../controller/MeetingInventoryController");
 const MeetingInventory = require("../model/MeetingInventory");
+const Inventory = require("../model/Inventory");
 
 const router = express.Router();
 
@@ -61,5 +62,71 @@ router.put("/:meetingId/inventory/:inventoryId", async (req, res) => {
     }
   });
   
+
+
+
+  router.post("/add-inventory/:meetingId/:inventoryId", async (req, res) => {
+    try {
+        const { meetingId, inventoryId } = req.params;
+
+        // Find MeetingInventory by ID
+        const meetingInventory = await MeetingInventory.findById(meetingId);
+        if (!meetingInventory) {
+            return res.status(404).json({ message: "MeetingInventory not found" });
+        }
+
+        const inventoryDetails= await Inventory.findById(inventoryId).populate("brand category");
+        // Check if inventory item already exists
+        const isAlreadyAdded = Array.isArray(meetingInventory?.inventory) && 
+        meetingInventory.inventory.some(item => 
+            item?.inventory_url?.toString() === inventoryId
+        );
+    
+
+        if (isAlreadyAdded) {
+            return res.status(400).json({ message: "Inventory item already added" });
+        }
+
+        // Push the new inventory item
+        meetingInventory.inventory.push({ inventory_url: inventoryId ,isAvailable:true,quantity:1,brand:inventoryDetails.brand.brandName,category:inventoryDetails.category.categoryName,itemName:inventoryDetails.itemName});
+
+        // Save updated meeting inventory
+        await meetingInventory.save();
+
+        res.status(200).json({ message: "Inventory added successfully", data: meetingInventory });
+    } catch (error) {
+        console.error("Error adding inventory:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+
+router.put("/update/:meetingInventoryId", async (req, res) => {
+  try {
+      const { meetingInventoryId } = req.params;
+      const updateData = req.body;
+
+      // Ensure there's at least one field to update
+      if (Object.keys(updateData).length === 0) {
+          return res.status(400).json({ message: "No fields provided for update" });
+      }
+
+      const updatedMeeting = await MeetingInventory.findByIdAndUpdate(
+          meetingInventoryId,
+          { $set: updateData },
+          { new: true, runValidators: true }
+      );
+
+      if (!updatedMeeting) {
+          return res.status(404).json({ message: "Meeting Inventory not found" });
+      }
+
+      res.status(200).json({ message: "Meeting Inventory updated", data: updatedMeeting });
+  } catch (error) {
+      console.error("Error updating Meeting Inventory:", error);
+      res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 
 module.exports = router;

@@ -50,14 +50,19 @@ exports.getMeetingById = async (req, res) => {
 
         // Find the meeting and populate inventory and user
         const meeting = await MeetingInventory.findById(id)
-            .populate({
-                path: 'inventory.inventory_url',
-                model: 'Inventory'
-            })
-            .populate({
-                path: 'user',
-                model: 'User'
-            });
+        .populate({
+            path: 'inventory.inventory_url',
+            model: 'Inventory',
+            populate: [
+                { path: 'brand', model: 'Brand' },       // Populate brand
+                { path: 'category', model: 'Category' } // Populate category
+            ]
+        })
+        .populate({
+            path: 'user',
+            model: 'User'
+        });
+    
 
         if (!meeting) {
             return res.status(404).json({ message: 'Meeting not found' });
@@ -67,7 +72,7 @@ exports.getMeetingById = async (req, res) => {
         const meetingObject = meeting.toObject();
 
         // Filter out inventory items where `isAvailable` is `true`
-        meetingObject.inventory = meetingObject.inventory.filter(item => item.isAvailable === true);
+        meetingObject.inventory = meetingObject.inventory.filter(item => item.isAvailable == true);
 
         // Keep the user data
         const user = meetingObject.user || null;
@@ -75,6 +80,7 @@ exports.getMeetingById = async (req, res) => {
         // Send the response with the filtered inventory and user
         res.status(200).json({ ...meetingObject, user });
     } catch (error) {
+        console.log('err',error)
         res.status(500).json({ message: 'Error fetching meeting', error });
     }
 };
