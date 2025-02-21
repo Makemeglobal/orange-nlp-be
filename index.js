@@ -17,6 +17,8 @@ const contractRoutes = require('./routes/contractRoutes');
 const leadRoutes = require('./routes/leadRoutes');
 const meetingInventoryRoutes = require('./routes/MeetingInventoryRoutes');
 const schedulingCallRoutes = require('./routes/schedulingCallRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const brandRoutes = require('./routes/brandRoutes');
 
 
 connectDB();
@@ -33,6 +35,8 @@ app.use("/contracts", contractRoutes);
 app.use("/leads",leadRoutes)
 app.use('/meetings', meetingInventoryRoutes);
 app.use('/scheduling-calls',schedulingCallRoutes)
+app.use('/category',categoryRoutes)
+app.use('/brand',brandRoutes)
 
 
 const server = http.createServer(app);
