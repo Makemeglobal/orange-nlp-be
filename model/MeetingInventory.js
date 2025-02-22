@@ -25,6 +25,18 @@ const MeetingInventorySchema = new Schema({
             ref: "Inventory",
             required: true,
           },
+          suggestions: [
+            {
+                suggestionId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "Inventory",
+                },
+                notes: {
+                    type: String, // Notes field for additional information
+                    default: "",
+                }
+            }
+        ],
           
     }],
     subtitle: { type: String },
