@@ -79,7 +79,9 @@ router.post("/add-inventory/:meetingId/:inventoryId", async (req, res) => {
     }
 
     // Find inventory details
-    const inventoryDetails = await Inventory.findById(inventoryId).populate("brand category");
+    const inventoryDetails = await Inventory.findById(inventoryId).populate(
+      "brand category"
+    );
 
     // Check if inventory is already present
     const isAlreadyAdded = latestMeeting.inventory.some(
@@ -95,34 +97,33 @@ router.post("/add-inventory/:meetingId/:inventoryId", async (req, res) => {
       ...latestMeeting.toObject(), // Copy all fields
       _id: undefined, // Remove _id so MongoDB generates a new one
       version: latestMeeting.version + 1,
-      lastUpdated:new Date(), // Increment version
+      lastUpdated: new Date(), // Increment version
       inventory: [
-        ...latestMeeting.inventory, 
+        ...latestMeeting.inventory,
         {
           inventory_url: inventoryId,
           isAvailable: true,
           quantity: 1,
           brand: inventoryDetails.brand.brandName,
           category: inventoryDetails.category.categoryName,
-          itemName: inventoryDetails.itemName
-        }
+          itemName: inventoryDetails.itemName,
+        },
       ],
-      meetingGroupId: latestMeeting.meetingGroupId || latestMeeting._id.toString() // Keep group ID consistent
+      meetingGroupId:
+        latestMeeting.meetingGroupId || latestMeeting._id.toString(), // Keep group ID consistent
     });
 
     await newVersion.save();
 
     res.status(201).json({
       message: "New version created with added inventory",
-      data: newVersion
+      data: newVersion,
     });
-
   } catch (error) {
     console.error("Error creating new version:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
-
 
 router.put("/update/:meetingInventoryId", async (req, res) => {
   try {
@@ -231,6 +232,61 @@ router.post(
   }
 );
 
+router.post("/:meetingId/inventory/:inventoryId/notes", async (req, res) => {
+  try {
+    const { note } = req.body; // Note text
+    const { meetingId, inventoryId } = req.params;
+
+    if (!note) {
+      return res.status(400).json({ message: "Note cannot be empty" });
+    }
+
+    // Find the latest version of the meeting
+    const latestMeeting = await MeetingInventory.findOne({
+      meetingGroupId: meetingId,
+    }).sort({ version: -1 });
+
+    if (!latestMeeting) {
+      return res.status(404).json({ message: "MeetingInventory not found" });
+    }
+
+    // Find the inventory item
+    const inventoryItem = latestMeeting.inventory.find(
+      (item) => item.inventory_url.toString() === inventoryId
+    );
+
+    if (!inventoryItem) {
+      return res.status(404).json({ message: "Inventory item not found" });
+    }
+
+    // Add the new note
+    // Ensure notes array exists before pushing
+    if (!inventoryItem.notes) {
+      inventoryItem.notes = [];
+    }
+
+    inventoryItem.notes.push({ text: note });
+
+    // Create a new version of the meeting with updated data
+    const newVersion = new MeetingInventory({
+      ...latestMeeting.toObject(), // Copy previous meeting data
+      _id: new mongoose.Types.ObjectId(), // Generate a new ID
+      version: latestMeeting.version + 1, // Increment version
+      lastUpdated: new Date(), // Update timestamp
+      inventory: latestMeeting.inventory, // Copy inventory with updated notes
+    });
+
+    await newVersion.save();
+
+    res.status(200).json({
+      message: "Note added successfully",
+      meeting: newVersion,
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+});
 
 router.delete(
   "/:meetingId/inventory/:inventoryId/suggestions/:suggestionId",
@@ -292,9 +348,6 @@ router.delete(
   }
 );
 
-
-
-
 router.delete("/remove-inventory/:meetingId/:inventoryId", async (req, res) => {
   try {
     const { meetingId, inventoryId } = req.params;
@@ -342,9 +395,6 @@ router.delete("/remove-inventory/:meetingId/:inventoryId", async (req, res) => {
   }
 });
 
-
-
-
 router.get("/meeting-versions/:meetingId", async (req, res) => {
   try {
     const { meetingId } = req.params;
@@ -356,19 +406,77 @@ router.get("/meeting-versions/:meetingId", async (req, res) => {
     }
 
     // Count all versions under the same `meetingGroupId`
-    const totalVersions = await MeetingInventory.countDocuments({ 
-      meetingGroupId: { $exists: true, $eq: meeting.meetingGroupId } 
+    const totalVersions = await MeetingInventory.countDocuments({
+      meetingGroupId: { $exists: true, $eq: meeting.meetingGroupId },
     });
-    
 
     res.status(200).json({
       meetingGroupId: meeting.meetingGroupId,
-      totalVersions
+      totalVersions,
+      lastUpdated: meeting.lastUpdated,
     });
-
   } catch (error) {
     console.error("Error fetching meeting versions:", error);
     res.status(500).json({ message: "Error fetching meeting versions", error });
+  }
+});
+
+
+router.delete("/:meetingId/inventory/:inventoryId/notes", async (req, res) => {
+  try {
+    const { note } = req.body; // Get note text from request body
+
+    if (!note || note.trim() === "") {
+      return res.status(400).json({ message: "Note cannot be empty" });
+    }
+
+    // Find the latest version of the meeting
+    const latestMeeting = await MeetingInventory.findOne({
+      meetingGroupId: req.params.meetingId,
+    }).sort({ version: -1 });
+
+    if (!latestMeeting) {
+      return res.status(404).json({ message: "MeetingInventory not found" });
+    }
+
+    // Find the inventory item in the latest meeting's inventory
+    const inventoryItem = latestMeeting.inventory.find(
+      (item) => item.inventory_url.toString() === req.params.inventoryId
+    );
+
+    if (!inventoryItem) {
+      return res.status(404).json({ message: "Inventory item not found" });
+    }
+
+    // Ensure notes exist
+    if (!inventoryItem.notes) {
+      return res.status(400).json({ message: "No notes found" });
+    }
+
+    // Remove note by matching text
+    const updatedNotes = inventoryItem.notes.filter((n) => n.text !== note);
+
+    if (updatedNotes.length === inventoryItem.notes.length) {
+      return res.status(404).json({ message: "Note not found" });
+    }
+
+    inventoryItem.notes = updatedNotes;
+
+    // Create a new version of the meeting with updated data
+    const newVersion = new MeetingInventory({
+      ...latestMeeting.toObject(), // Copy previous meeting data
+      _id: new mongoose.Types.ObjectId(), // Generate a new ID
+      version: latestMeeting.version + 1, // Increment version
+      lastUpdated: new Date(), // Update timestamp
+      inventory: latestMeeting.inventory, // Copy inventory with updated notes
+    });
+
+    await newVersion.save();
+
+    res.status(200).json({ message: "Note deleted successfully", meeting: newVersion });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 });
 
