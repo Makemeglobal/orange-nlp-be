@@ -6,10 +6,19 @@ module.exports = (io) => {
   io.on("connection", (socket) => {
     console.log("New client connected:", socket.id);
 
+
     // Joining a room
     socket.on("join-room", (roomId) => {
+      console.log('room',roomId)
+      if (!roomId) {
+        console.log("⚠️ Room ID is missing!");
+        return;
+      }
+
       socket.join(roomId);
-      console.log(`Socket ${socket.id} joined room ${roomId}`);
+      console.log(`✅ Socket ${socket.id} joined room ${roomId}`);
+
+      // Send confirmation to the client
       socket.emit("room-joined", {
         roomId,
         message: `Successfully joined room ${roomId}`,
@@ -22,6 +31,17 @@ module.exports = (io) => {
       console.log(`Socket ${socket.id} left room ${roomId}`);
     });
 
+
+    socket.on("changes-requested", (data) => {
+      console.log("Changes are requested-added event:", data);
+      io.to(data.meetingId).emit("changes-requested", data);
+    });
+
+    // Listen for suggestion removed event
+    socket.on("client-sent", (data) => {
+      console.log("Client sent:", data);
+      io.to(data.meetingId).emit("client-sent", data);
+    });
 
     socket.on("join-private-chat", async ({ userId, targetUserId }) => {
       const privateRoomId = [userId, targetUserId].sort().join("-");

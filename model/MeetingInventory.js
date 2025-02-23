@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const MeetingInventorySchema = new Schema({
+    meetingGroupId: { type: String, required: false }, // Common ID for all versions of a meeting
+
     project_Name: { type: String, required: true },
     person_Name: { type: String, required: true },
     end: { type: Date, required: false },
@@ -40,6 +42,9 @@ const MeetingInventorySchema = new Schema({
           
     }],
     subtitle: { type: String },
+    version: { type: Number, default: 1 },
+    lastUpdated:{type:Date},
+
     isApproved:{type:Boolean,required:true,default:false}
 }, {
     timestamps: true

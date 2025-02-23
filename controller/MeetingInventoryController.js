@@ -94,52 +94,78 @@ exports.getMeetings = async (req, res) => {
 exports.getMeetingById = async (req, res) => {
   try {
     const { id } = req.params;
+    const version = parseInt(req.query.version) || null;
 
-    // Find the meeting and populate inventory, suggestions, and user
-    const meeting = await MeetingInventory.findById(id)
-      .populate({
-        path: "inventory.inventory_url",
-        model: "Inventory",
-        populate: [
-          { path: "brand", model: "Brand" }, // Populate brand
-          { path: "category", model: "Category" }, // Populate category
-        ],
-      })
-      .populate({
-        path: "inventory.suggestions.suggestionId", // Populate suggestion details
-        model: "Inventory",
-        populate: [
-            { path: "brand", model: "Brand" },       // Populate brand for suggestions
-            { path: "category", model: "Category" }  // Populate category for suggestions
-        ]
-    })
-      .populate({
-        path: "user",
-        model: "User",
-      });
+    let meeting;
+
+    if (version) {
+      // Fetch specific version
+      meeting = await MeetingInventory.findOne({ meetingGroupId: id, version })
+        .populate({
+          path: "inventory.inventory_url",
+          model: "Inventory",
+          populate: [
+            { path: "brand", model: "Brand" },
+            { path: "category", model: "Category" },
+          ],
+        })
+        .populate({
+          path: "inventory.suggestions.suggestionId",
+          model: "Inventory",
+          populate: [
+            { path: "brand", model: "Brand" },
+            { path: "category", model: "Category" },
+          ],
+        })
+        .populate({
+          path: "user",
+          model: "User",
+        });
+    } else {
+      // Fetch latest version
+      meeting = await MeetingInventory.findOne({ meetingGroupId: id })
+        .sort({ version: -1 }) // Get the latest version
+        .populate({
+          path: "inventory.inventory_url",
+          model: "Inventory",
+          populate: [
+            { path: "brand", model: "Brand" },
+            { path: "category", model: "Category" },
+          ],
+        })
+        .populate({
+          path: "inventory.suggestions.suggestionId",
+          model: "Inventory",
+          populate: [
+            { path: "brand", model: "Brand" },
+            { path: "category", model: "Category" },
+          ],
+        })
+        .populate({
+          path: "user",
+          model: "User",
+        });
+    }
 
     if (!meeting) {
       return res.status(404).json({ message: "Meeting not found" });
     }
 
-    // Convert the meeting to a plain object
+    // Convert meeting to a plain object
     const meetingObject = meeting.toObject();
 
-    // Filter out inventory items where `isAvailable` is `true`
+    // Filter out inventory items where `isAvailable` is `false`
     meetingObject.inventory = meetingObject.inventory.filter(
-      (item) => item.isAvailable == true
+      (item) => item.isAvailable === true
     );
 
-    // Keep the user data
-    const user = meetingObject.user || null;
-
-    // Send the response with the filtered inventory and user
-    res.status(200).json({ ...meetingObject, user });
+    res.status(200).json(meetingObject);
   } catch (error) {
-    console.log("err", error);
+    console.error("Error fetching meeting:", error);
     res.status(500).json({ message: "Error fetching meeting", error });
   }
 };
+
 
 exports.updateMeeting = async (req, res) => {
   try {
@@ -178,6 +204,7 @@ exports.deleteMeeting = async (req, res) => {
 exports.getAllMeetings = async (req, res) => {
   try {
     const usr = await User.findOne({ _id: req.user });
+    console.log('user',usr.email);
     const meetings = await MeetingInventory.find({
       $or: [{ email_id: usr.email, isApproved: true }, { user: req.user }],
     });
