@@ -39,7 +39,9 @@ router.put("/:meetingId/inventory/:inventoryId", async (req, res) => {
       return res.status(400).json({ message: "Quantity must be a number" });
     }
 
-    const meeting = await MeetingInventory.findById(meetingId);
+    const meeting = await MeetingInventory.findOne({
+      meetingGroupId: meetingId,
+    }).sort({ version: -1 });
     if (!meeting) {
       return res.status(404).json({ message: "Meeting not found" });
     }
@@ -73,11 +75,19 @@ router.post("/add-inventory/:meetingId/:inventoryId", async (req, res) => {
     const { meetingId, inventoryId } = req.params;
 
     // Find the latest version of the meeting
-    const latestMeeting = await MeetingInventory.findById(meetingId);
+    const latestMeeting = await MeetingInventory.findOne({
+      $or: [
+        { meetingGroupId: req.params.meetingId }, // Look for grouped versions
+        { _id: req.params.meetingId }, // Fallback to original entry
+      ],
+    }).sort({ version: -1 });
+    
+
     if (!latestMeeting) {
       return res.status(404).json({ message: "MeetingInventory not found" });
     }
 
+    console.log('latest meeting ',latestMeeting.version)
     // Find inventory details
     const inventoryDetails = await Inventory.findById(inventoryId).populate(
       "brand category"
@@ -166,8 +176,12 @@ router.post(
 
       // Find the latest version of the meeting
       const latestMeeting = await MeetingInventory.findOne({
-        meetingGroupId: req.params.meetingId,
+        $or: [
+          { meetingGroupId: req.params.meetingId }, // Look for grouped versions
+          { _id: req.params.meetingId }, // Fallback to original entry
+        ],
       }).sort({ version: -1 });
+      
 
       if (!latestMeeting) {
         return res.status(404).json({ message: "MeetingInventory not found" });
@@ -243,8 +257,12 @@ router.post("/:meetingId/inventory/:inventoryId/notes", async (req, res) => {
 
     // Find the latest version of the meeting
     const latestMeeting = await MeetingInventory.findOne({
-      meetingGroupId: meetingId,
+      $or: [
+        { meetingGroupId: req.params.meetingId }, // Look for grouped versions
+        { _id: req.params.meetingId }, // Fallback to original entry
+      ],
     }).sort({ version: -1 });
+    
 
     if (!latestMeeting) {
       return res.status(404).json({ message: "MeetingInventory not found" });
@@ -294,8 +312,12 @@ router.delete(
     try {
       // Find the latest version of the meeting
       const latestMeeting = await MeetingInventory.findOne({
-        meetingGroupId: req.params.meetingId,
+        $or: [
+          { meetingGroupId: req.params.meetingId }, // Look for grouped versions
+          { _id: req.params.meetingId }, // Fallback to original entry
+        ],
       }).sort({ version: -1 });
+      
 
       if (!latestMeeting) {
         return res.status(404).json({ message: "MeetingInventory not found" });
@@ -354,8 +376,12 @@ router.delete("/remove-inventory/:meetingId/:inventoryId", async (req, res) => {
 
     // Find the latest version of the meeting inventory
     const latestMeeting = await MeetingInventory.findOne({
-      meetingGroupId: meetingId,
+      $or: [
+        { meetingGroupId: req.params.meetingId }, // Look for grouped versions
+        { _id: req.params.meetingId }, // Fallback to original entry
+      ],
     }).sort({ version: -1 });
+    
 
     if (!latestMeeting) {
       return res.status(404).json({ message: "MeetingInventory not found" });
@@ -394,7 +420,6 @@ router.delete("/remove-inventory/:meetingId/:inventoryId", async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
-
 router.get("/meeting-versions/:meetingId", async (req, res) => {
   try {
     const { meetingId } = req.params;
@@ -405,19 +430,27 @@ router.get("/meeting-versions/:meetingId", async (req, res) => {
       return res.status(404).json({ message: "Meeting not found" });
     }
 
-    // Count all versions under the same `meetingGroupId`
-    const totalVersions = await MeetingInventory.countDocuments({
-      meetingGroupId: { $exists: true, $eq: meeting.meetingGroupId },
-    });
+    // Find the latest version under the same `meetingGroupId`
+    const latestMeeting = await MeetingInventory.findOne({
+      $or: [
+        { meetingGroupId: req.params.meetingId }, // Look for grouped versions
+        { _id: req.params.meetingId }, // Fallback to original entry
+      ],
+    }).sort({ version: -1 });
+    
+
+    if (!latestMeeting) {
+      return res.status(404).json({ message: "No meeting versions found" });
+    }
+    console.log('latest',latestMeeting.version)
 
     res.status(200).json({
-      meetingGroupId: meeting.meetingGroupId,
-      totalVersions,
-      lastUpdated: meeting.lastUpdated,
+      meetingGroupId: latestMeeting.meetingGroupId,
+      totalVersions:latestMeeting.version,
     });
   } catch (error) {
-    console.error("Error fetching meeting versions:", error);
-    res.status(500).json({ message: "Error fetching meeting versions", error });
+    console.error("Error fetching latest meeting version:", error);
+    res.status(500).json({ message: "Error fetching latest meeting version", error });
   }
 });
 
@@ -432,9 +465,12 @@ router.delete("/:meetingId/inventory/:inventoryId/notes", async (req, res) => {
 
     // Find the latest version of the meeting
     const latestMeeting = await MeetingInventory.findOne({
-      meetingGroupId: req.params.meetingId,
+      $or: [
+        { meetingGroupId: req.params.meetingId }, // Look for grouped versions
+        { _id: req.params.meetingId }, // Fallback to original entry
+      ],
     }).sort({ version: -1 });
-
+    
     if (!latestMeeting) {
       return res.status(404).json({ message: "MeetingInventory not found" });
     }

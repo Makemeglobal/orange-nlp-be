@@ -166,7 +166,6 @@ exports.getMeetingById = async (req, res) => {
   }
 };
 
-
 exports.updateMeeting = async (req, res) => {
   try {
     const { id } = req.params;
@@ -204,31 +203,50 @@ exports.deleteMeeting = async (req, res) => {
 exports.getAllMeetings = async (req, res) => {
   try {
     const usr = await User.findOne({ _id: req.user });
-    console.log('user',usr.email);
+    console.log("User:", usr.email);
+
+    // Fetch only Version 1 meetings for the user
     const meetings = await MeetingInventory.find({
       $or: [{ email_id: usr.email, isApproved: true }, { user: req.user }],
-    });
+      $or: [{ version: 1 }, { version: null }, { version: undefined }], // Only Version 1 or missing version
+    }).sort({ createdAt: 1 });
 
+    console.log("Unique Meetings Count:", meetings.length);
     res.status(200).json(meetings);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching all meetings", error });
+    res.status(500).json({ message: "Error fetching unique meetings", error });
   }
 };
 
 exports.approveMeeting = async (req, res) => {
   try {
-    const { id } = req.params;
-    const meeting = await MeetingInventory.findByIdAndUpdate(
-      id,
-      { $set: { isApproved: true } }, // Set isApproved to true
-      { new: true } // Return the updated document
-    );
+    const meetingId = req.params.id;
 
-    if (!meeting) {
+    // Find the latest version of the meeting
+    const latestMeeting = await MeetingInventory.findOne({
+      $or: [{ meetingGroupId: meetingId }, { _id: meetingId }],
+    }).sort({ version: -1 });
+
+    if (!latestMeeting) {
       return res.status(404).json({ message: "Meeting not found" });
     }
 
-    res.status(200).json({ message: "Meeting approved successfully", meeting });
+    // Ensure only the latest version is approved
+
+
+    // Approve the meeting
+    const updatedMeeting = await MeetingInventory.findByIdAndUpdate(
+      meetingId,
+      { $set: { isApproved: true } },
+      { new: true }
+    );
+
+    res
+      .status(200)
+      .json({
+        message: "Meeting approved successfully",
+        meeting: updatedMeeting,
+      });
   } catch (error) {
     res.status(500).json({ message: "Error approving meeting", error });
   }
