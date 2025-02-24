@@ -122,7 +122,7 @@ exports.getMeetingById = async (req, res) => {
           model: "User",
         });
     } else {
-      // Fetch latest version
+      // Try to fetch the latest version using meetingGroupId
       meeting = await MeetingInventory.findOne({ meetingGroupId: id })
         .sort({ version: -1 }) // Get the latest version
         .populate({
@@ -145,6 +145,31 @@ exports.getMeetingById = async (req, res) => {
           path: "user",
           model: "User",
         });
+
+      // If no meeting is found (meaning it's version 1 and doesn't have a meetingGroupId)
+      if (!meeting) {
+        meeting = await MeetingInventory.findOne({ _id: id }) // Fetch by original _id
+          .populate({
+            path: "inventory.inventory_url",
+            model: "Inventory",
+            populate: [
+              { path: "brand", model: "Brand" },
+              { path: "category", model: "Category" },
+            ],
+          })
+          .populate({
+            path: "inventory.suggestions.suggestionId",
+            model: "Inventory",
+            populate: [
+              { path: "brand", model: "Brand" },
+              { path: "category", model: "Category" },
+            ],
+          })
+          .populate({
+            path: "user",
+            model: "User",
+          });
+      }
     }
 
     if (!meeting) {
@@ -154,9 +179,9 @@ exports.getMeetingById = async (req, res) => {
     // Convert meeting to a plain object
     const meetingObject = meeting.toObject();
 
-    // Filter out inventory items where `isAvailable` is `false`
+    // Filter out inventory items where `inventory_url` is `null`
     meetingObject.inventory = meetingObject.inventory.filter(
-      (item) => item.isAvailable === true
+      (item) => item.inventory_url !== null
     );
 
     res.status(200).json(meetingObject);
@@ -205,16 +230,23 @@ exports.getAllMeetings = async (req, res) => {
     const usr = await User.findOne({ _id: req.user });
     console.log("User:", usr.email);
 
-    // Fetch only Version 1 meetings for the user
     const meetings = await MeetingInventory.find({
-      $or: [{ email_id: usr.email, isApproved: true }, { user: req.user }],
-      $or: [{ version: 1 }, { version: null }, { version: undefined }], // Only Version 1 or missing version
+      $and: [
+        {
+          $or: [{ email_id: usr.email, isApproved: true }, { user: req.user }],
+        },
+        {
+          $or: [{ version: 1 }, { version: null }, { version: undefined }],
+        },
+      ],
     }).sort({ createdAt: 1 });
 
-    console.log("Unique Meetings Count:", meetings.length);
+    console.log("Filtered Meetings Count:", meetings.length);
     res.status(200).json(meetings);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching unique meetings", error });
+    res
+      .status(500)
+      .json({ message: "Error fetching filtered meetings", error });
   }
 };
 
@@ -231,22 +263,16 @@ exports.approveMeeting = async (req, res) => {
       return res.status(404).json({ message: "Meeting not found" });
     }
 
-    // Ensure only the latest version is approved
-
-
-    // Approve the meeting
     const updatedMeeting = await MeetingInventory.findByIdAndUpdate(
       meetingId,
       { $set: { isApproved: true } },
       { new: true }
     );
 
-    res
-      .status(200)
-      .json({
-        message: "Meeting approved successfully",
-        meeting: updatedMeeting,
-      });
+    res.status(200).json({
+      message: "Meeting approved successfully",
+      meeting: updatedMeeting,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error approving meeting", error });
   }
@@ -257,8 +283,8 @@ exports.completeMeeting = async (req, res) => {
     const { id } = req.params;
     const meeting = await MeetingInventory.findByIdAndUpdate(
       id,
-      { $set: { status: "completed" } }, // Set isApproved to true
-      { new: true } // Return the updated document
+      { $set: { status: "completed" } }, 
+      { new: true } 
     );
 
     if (!meeting) {
