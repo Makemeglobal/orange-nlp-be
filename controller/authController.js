@@ -361,12 +361,18 @@ exports.getProfile = async (req, res) => {
 };
 
 exports.uploadImage = async (req, res) => {
+try{
   const imageUrl = req.file.path;
+  console.log('image url',imageUrl)
   res.status(200).json({
     message: "Upload successfully",
     success: true,
     imageUrl,
   });
+}catch(err){
+  console.log('err',err);
+  res.status(500).json({err:err.message})
+}
 };
 
 exports.uploadAudio = async (req, res) => {
