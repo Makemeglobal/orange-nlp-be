@@ -301,8 +301,12 @@ exports.getFilteredInventories = async (req, res) => {
   try {
     const userId = req.user; // Extract user ID from request
 
-    const inventories = await MeetingInventory.find({ user: userId })
-      .select("_id project_Name person_Name") // Select only the required fields
+    // Fetch only Version 1 inventories for the user
+    const inventories = await MeetingInventory.find({
+      user: userId,
+      $or: [{ version: 1 }, { version: null }, { version: undefined }], // Only Version 1 or missing version
+    })
+      .select("_id project_Name person_Name") // Select only required fields
       .lean(); // Convert Mongoose documents to plain objects
 
     return res.status(200).json({ success: true, data: inventories });

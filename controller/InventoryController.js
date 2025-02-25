@@ -42,10 +42,13 @@ exports.createInventory = async (req, res) => {
 
 exports.getAllInventorys = async (req, res) => {
   try {
-    const { filter, sortBy } = req.query;
+    const { filter, sortBy, isUser, contractor } = req.query;
+
+    // Determine user filter condition
+    let userFilter = isUser === "true" ? contractor : req.user;
 
     // Base query excluding soft-deleted items and filtering by user
-    let query = { is_deleted: false, user: req.user };
+    let query = { is_deleted: false, user: userFilter };
 
     // Apply filtering conditions
     if (filter === "in-stock") query.currentStockStatus = true;
@@ -71,7 +74,7 @@ exports.getAllInventorys = async (req, res) => {
       brand: item.brand?.brandName || "Unknown Brand",
       category: item.category?.categoryName || "Unknown Category",
       quantity: item.quantity,
-      price:item.price,
+      price: item.price,
       addedOn: item.createdAt ? item.createdAt.toLocaleDateString() : "N/A",
       lastUpdated: item.updatedAt ? item.updatedAt.toLocaleDateString() : "N/A",
       inStock: item.currentStockStatus,
@@ -82,6 +85,7 @@ exports.getAllInventorys = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // Get a single Inventory by ID
 exports.getInventoryById = async (req, res) => {
