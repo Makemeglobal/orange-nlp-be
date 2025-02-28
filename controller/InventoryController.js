@@ -48,7 +48,7 @@ exports.getAllInventorys = async (req, res) => {
     let userFilter = isUser === "true" ? contractor : req.user;
 
     // Base query excluding soft-deleted items and filtering by user
-    let query = { is_deleted: false, user: userFilter };
+    let query = { is_deleted: false };
 
     // Apply filtering conditions
     if (filter === "in-stock") query.currentStockStatus = true;
@@ -62,7 +62,8 @@ exports.getAllInventorys = async (req, res) => {
 
     // Fetch and format inventory items
     const inventoryItems = await Inventory.find(query)
-      .populate("brand category")
+      .populate("brand category user")
+    
       .sort(sortOptions);
 
     const formattedItems = inventoryItems.map((item) => ({
