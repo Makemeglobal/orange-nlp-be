@@ -67,7 +67,7 @@ exports.verifyOTPAndSignup = async (req, res) => {
 
     if (role === "vendor" && vendorDetails) {
       const {
-        vendorBusinessName,
+        businessName,
         address,
         phone,
         imageUrl,
@@ -75,7 +75,7 @@ exports.verifyOTPAndSignup = async (req, res) => {
       } = vendorDetails;
       await Vendor.create({
         userId: newUser._id,
-        vendorBusinessName,
+        businessName,
         address,
         phone,
         imageUrl,

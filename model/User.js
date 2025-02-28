@@ -99,7 +99,7 @@ const vendorSchema = new mongoose.Schema(
       type: String,
       // required:false
     },
-    vendorBusinessName: {
+    businessName: {
       type: String,
       required: true,
     },
