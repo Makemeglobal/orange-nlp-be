@@ -23,10 +23,10 @@ exports.sendOTP = async (req, res) => {
 
 exports.verifyOTPAndSignup = async (req, res) => {
   try {
-    const { email, otp, fullName, phone, password, role, businessDetails, vendorDetails } =
+    const { email, otp, fullName, phone, password, role, imageUrl, businessDetails, vendorDetails } =
       req.body;
 
-    console.log("details", email, otp, fullName, phone, password, role, businessDetails)
+    // console.log("details", email, otp, fullName, phone, password, role, imageUrl, businessDetails, vendorDetails);
     const otpRecord = await OTP.findOne({ email, otp });
     if (!otpRecord) {
       return res.status(400).json({ error: "Invalid or expired OTP" });
@@ -44,6 +44,7 @@ exports.verifyOTPAndSignup = async (req, res) => {
       password,
       email_verified: true,
       role,
+      imageUrl,
     });
 
     if (role === "business" && businessDetails) {
