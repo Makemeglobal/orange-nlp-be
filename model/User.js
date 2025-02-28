@@ -32,12 +32,12 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['user', 'business', 'admin'],
+      enum: ['user', 'business', 'vendor'],
       default: 'user',
     },
-    imageUrl:{
-      type:String,
-      required:false
+    imageUrl: {
+      type: String,
+      // required:false
     },
   },
   {
@@ -53,9 +53,9 @@ const businessSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
-    imageUrl:{
-      type:String,
-      required:false
+    imageUrl: {
+      type: String,
+      // required:false
     },
     businessName: {
       type: String,
@@ -63,7 +63,7 @@ const businessSchema = new mongoose.Schema(
     },
     address: {
       type: String,
-      required: true,
+      // required: true,
     },
     phone: {
       type: String,
@@ -73,11 +73,11 @@ const businessSchema = new mongoose.Schema(
       type: {
         type: String,
         enum: ['Point'],
-        required: false,
+        // required: false,
       },
       coordinates: {
         type: [Number],
-        required: false,
+        // required: false,
       },
     },
   },
@@ -88,7 +88,50 @@ const businessSchema = new mongoose.Schema(
 
 businessSchema.index({ location: '2dsphere' });
 
+const vendorSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    imageUrl: {
+      type: String,
+      // required:false
+    },
+    vendorBusinessName: {
+      type: String,
+      required: true,
+    },
+    address: {
+      type: String,
+      // required: true,
+    },
+    phone: {
+      type: String,
+      required: false,
+    },
+    location: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        // required: false,
+      },
+      coordinates: {
+        type: [Number],
+        // required: false,
+      },
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+vendorSchema.index({ location: '2dsphere' });
+
 const User = mongoose.model('User', userSchema);
 const Business = mongoose.model('Business', businessSchema);
+const Vendor = mongoose.model('Vendor', vendorSchema);
 
-module.exports = { User, Business };
+module.exports = { User, Business, Vendor };
