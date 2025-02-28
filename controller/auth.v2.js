@@ -1,4 +1,4 @@
-const { User, Business } = require("../model/User");
+const { User, Business, Vendor } = require("../model/User");
 const OTP = require("../model/Otp");
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
@@ -16,14 +16,14 @@ exports.sendOTP = async (req, res) => {
 
     res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     res.status(500).json({ error: error.message, message: "Failed to send OTP" });
   }
 };
 
 exports.verifyOTPAndSignup = async (req, res) => {
   try {
-    const { email, otp, fullName, phone, password, role, businessDetails } =
+    const { email, otp, fullName, phone, password, role, businessDetails, vendorDetails } =
       req.body;
 
     console.log("details", email, otp, fullName, phone, password, role, businessDetails)
@@ -57,6 +57,24 @@ exports.verifyOTPAndSignup = async (req, res) => {
       await Business.create({
         userId: newUser._id,
         businessName,
+        address,
+        phone,
+        imageUrl,
+        location,
+      });
+    }
+
+    if (role === "vendor" && vendorDetails) {
+      const {
+        vendorBusinessName,
+        address,
+        phone,
+        imageUrl,
+        location,
+      } = vendorDetails;
+      await Vendor.create({
+        userId: newUser._id,
+        vendorBusinessName,
         address,
         phone,
         imageUrl,
