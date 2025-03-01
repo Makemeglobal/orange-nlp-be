@@ -50,6 +50,16 @@ exports.getAllInventorys = async (req, res) => {
     // Base query excluding soft-deleted items and filtering by user
     let query = { is_deleted: false };
 
+// Check if the query param 'isUserSpecific' is 'true'
+if (req.query.isUserSpecific == 'true') {
+  // Set query.user to req.user
+  query.user = req.user;
+}
+
+// Now, query will have user if the condition is met
+console.log(query);
+    
+
     // Apply filtering conditions
     if (filter === "in-stock") query.currentStockStatus = true;
     if (filter === "out-of-stock") query.currentStockStatus = false;
