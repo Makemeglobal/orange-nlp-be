@@ -86,6 +86,7 @@ console.log(query);
       category: item.category?.categoryName || "Unknown Category",
       quantity: item.quantity,
       price: item.price,
+      user:item?.user,
       addedOn: item.createdAt ? item.createdAt.toLocaleDateString() : "N/A",
       lastUpdated: item.updatedAt ? item.updatedAt.toLocaleDateString() : "N/A",
       inStock: item.currentStockStatus,
