@@ -6,6 +6,7 @@ const { authMiddleware } = require("../middleware/auth");
 const { User } = require("../model/User");
 const ChatPrivate = require("../model/ChatPrivate");
 const Inventory = require("../model/Inventory");
+const jwt=require("jsonwebtoken")
 const PromoteSchema = require("../model/PromoteSchema");
 
 
@@ -79,4 +80,30 @@ router.get('/message/:chatRoomId', async (req, res) => {
       res.status(500).json({ message: "Server error", error });
     }
   });
+
+
+  const API_KEY = "3db48a46-26d7-4496-949f-a7053bdea4f8";
+const SECRET_KEY = "c664515d50122963e3822105d75c6857bbfce4a65acf86ca8bcdc34289803c9f";
+
+// Route to generate token
+router.get('/generate-token', (req, res) => {
+  try {
+    const payload = {
+      apikey: API_KEY,
+      permissions: ["allow_join", "allow_mod"], // Define permissions as needed
+    };
+
+    // Generate JWT token
+    const token = jwt.sign(payload, SECRET_KEY, {
+      algorithm: 'HS256',
+      expiresIn: '24h', // Token validity
+    });
+
+    // Send token as response
+    res.json({ token });
+  } catch (error) {
+    console.error("Error generating token:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 module.exports=router;

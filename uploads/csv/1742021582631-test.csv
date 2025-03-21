@@ -1,0 +1,6 @@
+brand,category,itemName,description,quantity,imageUrl,price,isPremium,status,currentStockStatus
+67d41e4366038a56cba341e8,67d41e3f66038a56cba341e5,Test Item 1,Description for Test Item 1,10,https://example.com/test-item-1.jpg,19.99,false,active,true
+67d41e4366038a56cba341e8,67d41e3f66038a56cba341e5,Test Item 2,Description for Test Item 2,20,https://example.com/test-item-2.jpg,29.99,true,draft,false
+67d41e4366038a56cba341e8,67d41e3f66038a56cba341e5,Premium Gadget,High-quality premium gadget,5,https://example.com/premium-gadget.jpg,99.99,true,active,true
+67d41e4366038a56cba341e8,67d41e3f66038a56cba341e5,Basic Tool,Standard tool for everyday use,50,https://example.com/basic-tool.jpg,9.99,false,active,true
+67d41e4366038a56cba341e8,67d41e3f66038a56cba341e5,Limited Edition Item,Special limited edition product,3,https://example.com/limited-edition.jpg,149.99,true,active,true

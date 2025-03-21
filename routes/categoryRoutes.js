@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Category = require("../model/Category");
+const Inventory = require("../model/Inventory");
 
 // Create a new category
 router.post("/", async (req, res) => {
@@ -20,9 +21,43 @@ router.post("/", async (req, res) => {
 // Get all categories
 router.get("/", async (req, res) => {
   try {
-    const categories = await Category.find();
+    const categories = await Category.find().populate("subCategories"); // Populate subCategories
     res.status(200).json(categories);
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get("/cats", async (req, res) => {
+  try {
+    const categories = await Category.find().populate("subCategories");
+
+    // Fetch inventory items grouped by category and subcategory
+    const inventoryItems = await Inventory.find()
+      .select("_id itemName imageUrl category subCategory")
+      .lean();
+
+    const formattedCategories = categories.map((category) => ({
+      id: category._id,
+      name: category.categoryName,
+      description: category.description,
+      subcategories: category.subCategories.map((sub) => ({
+        id: sub._id,
+        name: sub.subCategoryName,
+        description: sub.description,
+        products: inventoryItems
+          .filter(
+            (item) =>
+              item.category?.toString() === category._id.toString() &&
+              item.subCategory?.toString() === sub._id.toString()
+          )
+          .map((item) => (item.itemName)),
+      })),
+    }));
+
+    res.status(200).json(formattedCategories);
+  } catch (error) {
+    console.error("Error fetching categories:", error);
     res.status(500).json({ error: error.message });
   }
 });

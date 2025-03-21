@@ -18,7 +18,9 @@ const leadRoutes = require('./routes/leadRoutes');
 const meetingInventoryRoutes = require('./routes/MeetingInventoryRoutes');
 const schedulingCallRoutes = require('./routes/schedulingCallRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const subCategoryRoutes = require('./routes/subCategoryRoutes');
 const brandRoutes = require('./routes/brandRoutes');
+const projectV2Routes = require('./routes/projectV2Routes');
 
 
 connectDB();
@@ -37,7 +39,8 @@ app.use('/meetings', meetingInventoryRoutes);
 app.use('/scheduling-calls',schedulingCallRoutes)
 app.use('/category',categoryRoutes)
 app.use('/brand',brandRoutes)
-
+app.use('/project-v2',projectV2Routes)
+app.use('/sub-category',subCategoryRoutes)
 
 const server = http.createServer(app);
 const peerServer = ExpressPeerServer(server, {
